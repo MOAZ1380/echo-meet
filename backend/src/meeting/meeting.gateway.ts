@@ -14,20 +14,6 @@ import { RoomService } from '../room/room.service';
     origin: '*',
   },
 })
-/**
- * Socket events documentation
- * Incoming events:
- * - createRoom: create a room and auto-join creator
- * - joinRoom: join an existing room by roomId
- * - sendMessage: broadcast message to room
- *
- * Outgoing events:
- * - roomCreated: sent to creator with created roomId
- * - joinedRoom: sent to joiner after successful join
- * - userJoined: broadcast to room when user joins
- * - newMessage: broadcast to room with message payload
- * - error: sent to client when joinRoom fails (room not found)
- */
 export class ChatGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
