@@ -1,11 +1,18 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { RoomService } from './room.service';
 import { RoomController } from './room.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Module({
-  imports: [PrismaModule],
-  providers: [RoomService],
+  imports: [
+    PrismaModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET ?? 'dev-jwt-secret',
+    }),
+  ],
+  providers: [RoomService, JwtAuthGuard],
   controllers: [RoomController],
   exports: [RoomService],
 })

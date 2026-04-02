@@ -33,8 +33,11 @@ export class ChatGateway implements OnModuleInit {
    * Emits: roomCreated (server -> client)
    */
   @SubscribeMessage('createRoom')
-  async createRoom(@ConnectedSocket() client: Socket) {
-    const room = await this.roomService.createRoom();
+  async createRoom(
+    @MessageBody() data: { userId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const room = await this.roomService.createRoom({}, data.userId);
 
     client.join(room.id);
 
