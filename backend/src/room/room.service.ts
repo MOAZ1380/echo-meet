@@ -6,7 +6,7 @@ export class RoomService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createRoom() {
-    console.log('Creating a new room...');
+    console.log('[Room] Creating new room');
     const room = await this.prisma.room.create({
       data: {
         startTime: new Date(),

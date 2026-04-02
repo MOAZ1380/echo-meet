@@ -9,8 +9,25 @@ import {
 import { Server, Socket } from 'socket.io';
 import { RoomService } from '../room/room.service';
 
-// change port for 8000
-@WebSocketGateway(8000)
+@WebSocketGateway(8000, {
+  cors: {
+    origin: '*',
+  },
+})
+/**
+ * Socket events documentation
+ * Incoming events:
+ * - createRoom: create a room and auto-join creator
+ * - joinRoom: join an existing room by roomId
+ * - sendMessage: broadcast message to room
+ *
+ * Outgoing events:
+ * - roomCreated: sent to creator with created roomId
+ * - joinedRoom: sent to joiner after successful join
+ * - userJoined: broadcast to room when user joins
+ * - newMessage: broadcast to room with message payload
+ * - error: sent to client when joinRoom fails (room not found)
+ */
 export class ChatGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
@@ -18,47 +35,66 @@ export class ChatGateway implements OnModuleInit {
   constructor(private readonly roomService: RoomService) {}
 
   onModuleInit() {
-    console.log('ChatGateway initialized');
+    console.log('[Socket] Gateway ready on :8000');
   }
 
-  // when disconnected
   handleDisconnect(client: Socket) {
-    console.log(`Client ${client.id} disconnected`);
+    console.log(`[Socket] Disconnected: ${client.id}`);
   }
 
-  // 1️⃣ إنشء غرفة جديدة
+  /**
+   * Event: createRoom (client -> server)
+   * Emits: roomCreated (server -> client)
+   */
   @SubscribeMessage('createRoom')
   async createRoom(@ConnectedSocket() client: Socket) {
-    const room = await this.roomService.createRoom(); // Prisma يحفظها
+    const room = await this.roomService.createRoom();
+
     client.join(room.id);
-    console.log(`Client ${client.id} created and joined room ${room.id}`);
-    return { event: 'roomCreated', roomId: room.id };
+
+    console.log(`[Room] Created ${room.id} by ${client.id}`);
+
+    client.emit('roomCreated', { roomId: room.id });
   }
 
+  /**
+   * Event: joinRoom (client -> server)
+   * Emits: joinedRoom (server -> client), userJoined (server -> room)
+   */
   @SubscribeMessage('joinRoom')
-  async handleJoinRoom(
+  async joinRoom(
     @MessageBody() data: { roomId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    console.log(`Client ${client.id} is trying to join room ${data.roomId}`);
     const room = await this.roomService.findOne(data.roomId);
-    if (!room) return { event: 'error', message: 'Room not found' };
+
+    if (!room) {
+      return client.emit('error', { message: 'Room not found' });
+    }
 
     client.join(room.id);
-    this.server.to(room.id).emit('userJoined', { userId: client.id });
-    return { event: 'joinedRoom', roomId: room.id };
+
+    console.log(`[Room] ${client.id} joined ${room.id}`);
+
+    client.emit('joinedRoom', { roomId: room.id });
+
+    this.server.to(room.id).emit('userJoined', {
+      userId: client.id,
+    });
   }
 
+  /**
+   * Event: sendMessage (client -> server)
+   * Emits: newMessage (server -> room)
+   */
   @SubscribeMessage('sendMessage')
-  handleMessage(
+  sendMessage(
     @MessageBody() data: { roomId: string; message: string },
     @ConnectedSocket() client: Socket,
   ) {
-    console.log(
-      `Client ${client.id} sent message to room ${data.roomId}: ${data.message}`,
-    );
-    this.server
-      .to(data.roomId)
-      .emit('newMessage', { userId: client.id, message: data.message });
+    this.server.to(data.roomId).emit('newMessage', {
+      userId: client.id,
+      message: data.message,
+    });
   }
 }
