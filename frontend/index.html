@@ -1,13 +1,42 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Issue Meet Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 20px;
+      }
+      #localVideo,
+      .remoteVideo {
+        width: 200px;
+        height: 150px;
+        margin: 5px;
+        border: 1px solid #ccc;
+      }
+      #videos {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      #chat {
+        border: 1px solid #ccc;
+        width: 400px;
+        height: 200px;
+        overflow-y: auto;
+        padding: 5px;
+        margin-top: 10px;
+      }
+      #controls {
+        margin-top: 10px;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
