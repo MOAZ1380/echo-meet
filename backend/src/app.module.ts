@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ChatGateway } from './meeting/meeting.gateway';
@@ -9,7 +10,16 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [RoomModule, PrismaModule, UserModule, AuthModule, EmailModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    RoomModule,
+    PrismaModule,
+    UserModule,
+    AuthModule,
+    EmailModule,
+  ],
   controllers: [AppController],
   providers: [AppService, ChatGateway],
 })
