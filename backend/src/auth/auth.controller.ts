@@ -4,6 +4,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyPasswordResetOtpDto } from './dto/verify-password-reset-otp.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -34,7 +35,15 @@ export class AuthController {
   }
 
   /**
-   * Verifies the OTP and updates the user password.
+   * Verifies OTP and returns a short-lived reset token.
+   */
+  @Post('verify-password-reset-otp')
+  verifyPasswordResetOtp(@Body() data: VerifyPasswordResetOtpDto) {
+    return this.authService.verifyPasswordResetOtp(data);
+  }
+
+  /**
+   * Resets password using a previously verified reset token.
    */
   @Post('reset-password')
   resetPassword(@Body() data: ResetPasswordDto) {

@@ -24,8 +24,13 @@ export type RequestResetPayload = {
   email: string;
 };
 
-export type ResetPasswordPayload = {
+export type VerifyResetOtpPayload = {
   email: string;
   otp: string;
+};
+
+export type ResetPasswordPayload = {
+  email: string;
+  resetToken: string;
   newPassword: string;
 };

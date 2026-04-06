@@ -44,6 +44,9 @@ export function RegisterForm({ loading, onSubmit }: RegisterFormProps) {
         value={name}
         onChange={(event) => setName(event.target.value)}
       />
+      <p className="small">
+        If name is empty, we will use your email text before @.
+      </p>
       <button disabled={loading} type="submit">
         Register
       </button>

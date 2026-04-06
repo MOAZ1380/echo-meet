@@ -12,6 +12,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyPasswordResetOtpDto } from './dto/verify-password-reset-otp.dto';
 
 @Injectable()
 export class AuthService {
@@ -29,6 +30,20 @@ export class AuthService {
       sub: user.id,
       email: user.email,
     });
+  }
+
+  /**
+   * Creates a short-lived token that authorizes the password reset action.
+   */
+  private createPasswordResetToken(user: { id: string; email: string }) {
+    return this.jwtService.sign(
+      {
+        sub: user.id,
+        email: user.email,
+        purpose: 'password-reset',
+      },
+      { expiresIn: '10m' },
+    );
   }
 
   /**
@@ -111,9 +126,9 @@ export class AuthService {
   }
 
   /**
-   * Verifies the reset OTP and updates the password.
+   * Verifies the reset OTP and returns a temporary reset token.
    */
-  async resetPassword(data: ResetPasswordDto) {
+  async verifyPasswordResetOtp(data: VerifyPasswordResetOtpDto) {
     const user = await this.userService.findByEmailWithPassword(data.email);
 
     if (!user || !user.resetOtpHash || !user.resetOtpExpiresAt) {
@@ -130,14 +145,53 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired OTP');
     }
 
-    const updatedUser = await this.userService.updatePassword(
-      user.id,
-      data.newPassword,
-    );
+    return {
+      message: 'OTP verified',
+      resetToken: this.createPasswordResetToken({
+        id: user.id,
+        email: user.email,
+      }),
+    };
+  }
+
+  /**
+   * Resets password using a verified reset token.
+   */
+  async resetPassword(data: ResetPasswordDto) {
+    const user = await this.userService.findByEmailWithPassword(data.email);
+
+    if (!user || !user.resetOtpHash || !user.resetOtpExpiresAt) {
+      throw new BadRequestException('Invalid or expired OTP');
+    }
+
+    if (user.resetOtpExpiresAt.getTime() < Date.now()) {
+      throw new BadRequestException('Invalid or expired OTP');
+    }
+
+    let payload: { sub?: string; email?: string; purpose?: string };
+
+    try {
+      payload = this.jwtService.verify(data.resetToken) as {
+        sub?: string;
+        email?: string;
+        purpose?: string;
+      };
+    } catch {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    const tokenMatchesUser =
+      payload.purpose === 'password-reset' &&
+      payload.sub === user.id &&
+      payload.email === user.email;
+
+    if (!tokenMatchesUser) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    await this.userService.updatePassword(user.id, data.newPassword);
     await this.userService.clearResetOtp(user.id);
 
-    return this.buildAuthResponse(
-      updatedUser as { id: string; email: string; name?: string | null },
-    );
+    return { message: 'Password reset successful' };
   }
 }

@@ -1,58 +1,82 @@
 .app {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 20px;
+  max-width: 980px;
+  margin: 28px auto;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .small {
   margin: 0;
-  color: #565f72;
+  color: #5f637f;
   font-size: 14px;
 }
 
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 16px;
 }
 
 .card {
-  border: 1px solid #dce1ea;
-  border-radius: 10px;
-  background: #ffffff;
-  padding: 14px;
+  border: 1px solid #dae2f3;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9ff 100%);
+  box-shadow: 0 12px 30px rgba(8, 25, 57, 0.08);
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .inline {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
   flex-wrap: wrap;
 }
 
 input,
 button {
-  border-radius: 8px;
-  border: 1px solid #cbd4e1;
-  padding: 9px 11px;
+  border-radius: 12px;
+  border: 1px solid #cbd5eb;
+  padding: 10px 12px;
   font-size: 14px;
+  font-family: inherit;
 }
 
 input {
   width: 100%;
   box-sizing: border-box;
+  background: #fff;
+  color: #11152a;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2f6bff;
+  box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.14);
 }
 
 button {
   width: fit-content;
-  background: #eff3f8;
+  background: linear-gradient(180deg, #3d78ff 0%, #2e60d4 100%);
+  color: #fff;
+  border-color: #2e60d4;
+  font-weight: 600;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease;
   cursor: pointer;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(46, 96, 212, 0.28);
 }
 
 button:disabled {
@@ -72,6 +96,34 @@ button:disabled {
   font-size: 14px;
 }
 
+.auth-shell {
+  max-width: 640px;
+}
+
+.auth-shell > h1 {
+  margin: 0;
+  font-size: 38px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.auth-links a {
+  text-decoration: none;
+  color: #2349b5;
+  background: #e9f0ff;
+  border: 1px solid #cddcff;
+  padding: 7px 11px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .rooms-list {
   list-style: none;
   margin: 0;
@@ -87,14 +139,15 @@ button:disabled {
   align-items: center;
   gap: 8px;
   border: 1px solid #e4e8ef;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 8px;
   font-size: 13px;
+  background: #fff;
 }
 
 .chat-box {
   border: 1px solid #e4e8ef;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 10px;
   min-height: 100px;
   max-height: 180px;
@@ -111,16 +164,13 @@ button:disabled {
   margin-bottom: 0;
 }
 
-@media (max-width: 760px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .landing-page {
   min-height: 100vh;
   padding: 20px 24px;
-  background: #f8f9fa;
+  background:
+    radial-gradient(circle at 10% 10%, #d9e6ff 0%, transparent 40%),
+    radial-gradient(circle at 90% 20%, #dff7f1 0%, transparent 36%),
+    linear-gradient(180deg, #f4f7ff 0%, #eef2fb 100%);
 }
 
 .landing-header {
@@ -131,9 +181,10 @@ button:disabled {
 }
 
 .brand {
-  font-size: 22px;
-  font-weight: 700;
-  color: #1f1f1f;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #18203b;
 }
 
 .landing-hero {
@@ -145,18 +196,22 @@ button:disabled {
 }
 
 .landing-hero h1 {
-  font-size: 44px;
+  font-size: 48px;
   line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: #101937;
 }
 
 .landing-hero p {
-  color: #5f6368;
+  color: #505875;
+  max-width: 64ch;
 }
 
 .landing-join-box {
   margin-top: 18px;
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .landing-join-box input {
@@ -304,6 +359,11 @@ button:disabled {
   color: #e8eaed;
 }
 
+.meeting-controls button:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .meeting-controls button.danger {
   background: #ea4335;
   border-color: #ea4335;
@@ -331,5 +391,24 @@ button:disabled {
 
   .meeting-ready {
     text-align: left;
+  }
+}
+
+@media (max-width: 760px) {
+  .app {
+    margin: 12px auto;
+    padding: 14px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-shell > h1 {
+    font-size: 32px;
+  }
+
+  .landing-hero h1 {
+    font-size: 35px;
   }
 }

@@ -8,6 +8,7 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { RequestResetPage } from "./pages/RequestResetPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { RoomsPage } from "./pages/RoomsPage";
+import { VerifyResetOtpPage } from "./pages/VerifyResetOtpPage";
 
 import "./App.css";
 
@@ -24,6 +25,7 @@ function App() {
       <Route path="/auth/login" element={<LoginPage />} />
       <Route path="/auth/register" element={<RegisterPage />} />
       <Route path="/auth/request-reset" element={<RequestResetPage />} />
+      <Route path="/auth/verify-reset-otp" element={<VerifyResetOtpPage />} />
       <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
       <Route path="/join" element={<JoinPage />} />
       <Route path="/meet/:roomId" element={<MeetingPage />} />

@@ -10,6 +10,7 @@ import {
   register as registerApi,
   requestPasswordReset as requestPasswordResetApi,
   resetPassword as resetPasswordApi,
+  verifyPasswordResetOtp as verifyPasswordResetOtpApi,
 } from "../api/authApi";
 import type {
   AuthResponse,
@@ -18,6 +19,7 @@ import type {
   RegisterPayload,
   RequestResetPayload,
   ResetPasswordPayload,
+  VerifyResetOtpPayload,
 } from "../types/auth";
 
 type AuthContextValue = {
@@ -27,7 +29,8 @@ type AuthContextValue = {
   register: (payload: RegisterPayload) => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
   requestPasswordReset: (payload: RequestResetPayload) => Promise<string>;
-  resetPassword: (payload: ResetPasswordPayload) => Promise<void>;
+  verifyPasswordResetOtp: (payload: VerifyResetOtpPayload) => Promise<string>;
+  resetPassword: (payload: ResetPasswordPayload) => Promise<string>;
   logout: () => void;
 };
 
@@ -87,9 +90,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result.message;
   }
 
+  async function verifyPasswordResetOtp(payload: VerifyResetOtpPayload) {
+    const result = await verifyPasswordResetOtpApi(payload);
+    return result.resetToken;
+  }
+
   async function resetPassword(payload: ResetPasswordPayload) {
-    const auth = await resetPasswordApi(payload);
-    setAuth(auth);
+    const result = await resetPasswordApi(payload);
+    return result.message;
   }
 
   function logout() {
@@ -106,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       login,
       requestPasswordReset,
+      verifyPasswordResetOtp,
       resetPassword,
       logout,
     }),

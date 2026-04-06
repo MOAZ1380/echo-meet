@@ -17,6 +17,7 @@ export function RequestResetForm({ loading, onSubmit }: RequestResetFormProps) {
   return (
     <form className="card" onSubmit={handleSubmit}>
       <h2>Request Reset Code</h2>
+      <p className="small">Step 1 of 3: Enter your email</p>
       <input
         type="email"
         placeholder="Email"

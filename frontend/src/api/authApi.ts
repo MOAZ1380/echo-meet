@@ -1,10 +1,11 @@
 import { apiRequest } from "./client";
 import type {
-  AuthResponse,
   LoginPayload,
   RegisterPayload,
   RequestResetPayload,
   ResetPasswordPayload,
+  VerifyResetOtpPayload,
+  AuthResponse,
 } from "../types/auth";
 
 export function register(payload: RegisterPayload) {
@@ -28,8 +29,18 @@ export function requestPasswordReset(payload: RequestResetPayload) {
   });
 }
 
+export function verifyPasswordResetOtp(payload: VerifyResetOtpPayload) {
+  return apiRequest<{ message: string; resetToken: string }>(
+    "/auth/verify-password-reset-otp",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
 export function resetPassword(payload: ResetPasswordPayload) {
-  return apiRequest<AuthResponse>("/auth/reset-password", {
+  return apiRequest<{ message: string }>("/auth/reset-password", {
     method: "POST",
     body: JSON.stringify(payload),
   });

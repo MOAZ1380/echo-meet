@@ -44,9 +44,12 @@ export class UserService {
       throw new ConflictException('Email already exists');
     }
 
+    const normalizedName = data.name?.trim() || data.email.split('@')[0];
+
     const createdUser = await this.prisma.user.create({
       data: {
         ...data,
+        name: normalizedName,
         password: await this.hashPassword(data.password),
       },
     });

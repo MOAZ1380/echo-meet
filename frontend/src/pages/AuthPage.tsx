@@ -3,14 +3,12 @@ import { Navigate } from "react-router-dom";
 import { LoginForm } from "../components/auth/LoginForm";
 import { RegisterForm } from "../components/auth/RegisterForm";
 import { RequestResetForm } from "../components/auth/RequestResetForm";
-import { ResetPasswordForm } from "../components/auth/ResetPasswordForm";
 import { StatusMessage } from "../components/common/StatusMessage";
 import { useAuth } from "../hooks/useAuth";
 import type {
   LoginPayload,
   RegisterPayload,
   RequestResetPayload,
-  ResetPasswordPayload,
 } from "../types/auth";
 
 export function AuthPage() {
@@ -69,19 +67,6 @@ export function AuthPage() {
     }
   }
 
-  async function handleResetPassword(payload: ResetPasswordPayload) {
-    setLoading(true);
-    resetStatus();
-    try {
-      await auth.resetPassword(payload);
-      setInfo("Password reset and logged in");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Reset password failed");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <main className="app">
       <h1>Echo Meet</h1>
@@ -96,7 +81,13 @@ export function AuthPage() {
 
       <section className="grid">
         <RequestResetForm loading={loading} onSubmit={handleRequestReset} />
-        <ResetPasswordForm loading={loading} onSubmit={handleResetPassword} />
+        <section className="card">
+          <h2>Reset Password</h2>
+          <p className="small">
+            Use the new 3-step flow: request code, verify OTP, then reset
+            password.
+          </p>
+        </section>
       </section>
     </main>
   );

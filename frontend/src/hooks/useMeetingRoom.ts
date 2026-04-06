@@ -32,8 +32,8 @@ export function useMeetingRoom(displayName: string) {
   const [socketStatus, setSocketStatus] = useState<
     "connected" | "disconnected"
   >(socket.connected ? "connected" : "disconnected");
-  const [micEnabled, setMicEnabled] = useState(false);
-  const [camEnabled, setCamEnabled] = useState(false);
+  const [micEnabled, setMicEnabled] = useState(true);
+  const [camEnabled, setCamEnabled] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   const localStreamRef = useRef<MediaStream | null>(null);
