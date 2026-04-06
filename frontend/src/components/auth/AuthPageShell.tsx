@@ -7,7 +7,11 @@ type AuthPageShellProps = {
   children: ReactNode;
 };
 
-export function AuthPageShell({ title, subtitle, children }: AuthPageShellProps) {
+export function AuthPageShell({
+  title,
+  subtitle,
+  children,
+}: AuthPageShellProps) {
   return (
     <main className="app auth-shell">
       <h1>Echo Meet</h1>

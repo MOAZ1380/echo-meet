@@ -1,8 +1,10 @@
 type MeetingControlsProps = {
   micEnabled: boolean;
   camEnabled: boolean;
+  isScreenSharing: boolean;
   onToggleMic: () => void;
   onToggleCam: () => void;
+  onToggleScreenShare: () => void;
   onLeave: () => void;
   onToggleChat: () => void;
 };
@@ -10,8 +12,10 @@ type MeetingControlsProps = {
 export function MeetingControls({
   micEnabled,
   camEnabled,
+  isScreenSharing,
   onToggleMic,
   onToggleCam,
+  onToggleScreenShare,
   onLeave,
   onToggleChat,
 }: MeetingControlsProps) {
@@ -30,6 +34,13 @@ export function MeetingControls({
         className={camEnabled ? "" : "danger"}
       >
         {camEnabled ? "Turn Camera Off" : "Turn Camera On"}
+      </button>
+      <button
+        type="button"
+        onClick={onToggleScreenShare}
+        className={isScreenSharing ? "danger" : ""}
+      >
+        {isScreenSharing ? "Stop Share" : "Share Screen"}
       </button>
       <button type="button" onClick={onToggleChat}>
         Chat

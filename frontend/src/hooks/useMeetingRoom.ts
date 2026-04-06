@@ -12,6 +12,12 @@ type RemoteParticipant = {
   stream: MediaStream;
 };
 
+type ChatPayload = {
+  type?: string;
+  text?: string;
+  sender?: string;
+};
+
 const RTC_CONFIG: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
@@ -28,10 +34,42 @@ export function useMeetingRoom(displayName: string) {
   >(socket.connected ? "connected" : "disconnected");
   const [micEnabled, setMicEnabled] = useState(false);
   const [camEnabled, setCamEnabled] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   const localStreamRef = useRef<MediaStream | null>(null);
+  const screenStreamRef = useRef<MediaStream | null>(null);
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const roomIdRef = useRef("");
+
+  const createPreviewStream = useCallback(
+    (baseStream: MediaStream, videoTrack: MediaStreamTrack | null) => {
+      const audioTracks = baseStream.getAudioTracks();
+      const tracks = videoTrack
+        ? [...audioTracks, videoTrack]
+        : [...audioTracks];
+      return new MediaStream(tracks);
+    },
+    [],
+  );
+
+  const replaceOutgoingVideoTrack = useCallback(
+    async (track: MediaStreamTrack | null) => {
+      const tasks: Promise<void>[] = [];
+
+      peerConnectionsRef.current.forEach((pc) => {
+        const sender = pc
+          .getSenders()
+          .find((item) => item.track && item.track.kind === "video");
+
+        if (!sender) return;
+
+        tasks.push(sender.replaceTrack(track));
+      });
+
+      await Promise.all(tasks);
+    },
+    [],
+  );
 
   const ensureLocalMedia = useCallback(async () => {
     if (localStreamRef.current) return localStreamRef.current;
@@ -41,13 +79,23 @@ export function useMeetingRoom(displayName: string) {
       video: true,
     });
 
+    stream.getAudioTracks().forEach((track) => {
+      track.enabled = false;
+    });
+
+    stream.getVideoTracks().forEach((track) => {
+      track.enabled = false;
+    });
+
     localStreamRef.current = stream;
-    setLocalStream(stream);
+    setLocalStream(
+      createPreviewStream(stream, stream.getVideoTracks()[0] || null),
+    );
     setMicEnabled(false);
     setCamEnabled(false);
 
     return stream;
-  }, []);
+  }, [createPreviewStream]);
 
   const upsertRemoteStream = useCallback(
     (participantId: string, stream: MediaStream) => {
@@ -142,6 +190,54 @@ export function useMeetingRoom(displayName: string) {
     [displayName],
   );
 
+  const stopScreenShare = useCallback(async () => {
+    const baseStream = localStreamRef.current;
+    if (!baseStream) return;
+
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((track) => track.stop());
+      screenStreamRef.current = null;
+    }
+
+    const cameraTrack = camEnabled
+      ? baseStream.getVideoTracks()[0] || null
+      : null;
+    await replaceOutgoingVideoTrack(cameraTrack);
+    setLocalStream(createPreviewStream(baseStream, cameraTrack));
+    setIsScreenSharing(false);
+  }, [camEnabled, createPreviewStream, replaceOutgoingVideoTrack]);
+
+  const toggleScreenShare = useCallback(async () => {
+    if (isScreenSharing) {
+      await stopScreenShare();
+      return;
+    }
+
+    const baseStream = await ensureLocalMedia();
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+    });
+
+    const screenTrack = screenStream.getVideoTracks()[0];
+    if (!screenTrack) return;
+
+    screenStreamRef.current = screenStream;
+
+    screenTrack.onended = () => {
+      void stopScreenShare();
+    };
+
+    await replaceOutgoingVideoTrack(screenTrack);
+    setLocalStream(createPreviewStream(baseStream, screenTrack));
+    setIsScreenSharing(true);
+  }, [
+    createPreviewStream,
+    ensureLocalMedia,
+    isScreenSharing,
+    replaceOutgoingVideoTrack,
+    stopScreenShare,
+  ]);
+
   const toggleMic = useCallback(() => {
     const stream = localStreamRef.current;
     if (!stream) return;
@@ -158,11 +254,26 @@ export function useMeetingRoom(displayName: string) {
     if (!stream) return;
 
     const nextEnabled = !camEnabled;
+    const cameraTrack = stream.getVideoTracks()[0] || null;
+
     stream.getVideoTracks().forEach((track) => {
       track.enabled = nextEnabled;
     });
+
+    if (!isScreenSharing) {
+      void replaceOutgoingVideoTrack(nextEnabled ? cameraTrack : null);
+      setLocalStream(
+        createPreviewStream(stream, nextEnabled ? cameraTrack : null),
+      );
+    }
+
     setCamEnabled(nextEnabled);
-  }, [camEnabled]);
+  }, [
+    camEnabled,
+    createPreviewStream,
+    isScreenSharing,
+    replaceOutgoingVideoTrack,
+  ]);
 
   const leaveMeeting = useCallback(() => {
     peerConnectionsRef.current.forEach((pc) => pc.close());
@@ -176,6 +287,13 @@ export function useMeetingRoom(displayName: string) {
       localStreamRef.current = null;
       setLocalStream(null);
     }
+
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((track) => track.stop());
+      screenStreamRef.current = null;
+    }
+
+    setIsScreenSharing(false);
   }, []);
 
   useEffect(() => {
@@ -242,11 +360,7 @@ export function useMeetingRoom(displayName: string) {
 
     function onNewMessage(data: { userId: string; message: string }) {
       try {
-        const parsed = JSON.parse(data.message) as {
-          type?: string;
-          text?: string;
-          sender?: string;
-        };
+        const parsed = JSON.parse(data.message) as ChatPayload;
 
         if (parsed.type !== "chat" || !parsed.text) return;
 
@@ -300,11 +414,13 @@ export function useMeetingRoom(displayName: string) {
     socketStatus,
     micEnabled,
     camEnabled,
+    isScreenSharing,
     ensureLocalMedia,
     joinMeeting,
     sendChatMessage,
     toggleMic,
     toggleCamera,
+    toggleScreenShare,
     leaveMeeting,
   };
 }

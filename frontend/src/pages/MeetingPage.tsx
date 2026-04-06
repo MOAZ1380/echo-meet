@@ -22,11 +22,13 @@ export function MeetingPage() {
     socketStatus,
     micEnabled,
     camEnabled,
+    isScreenSharing,
     ensureLocalMedia,
     joinMeeting,
     sendChatMessage,
     toggleMic,
     toggleCamera,
+    toggleScreenShare,
     leaveMeeting,
   } = useMeetingRoom(displayName);
 
@@ -107,8 +109,10 @@ export function MeetingPage() {
         <MeetingControls
           micEnabled={micEnabled}
           camEnabled={camEnabled}
+          isScreenSharing={isScreenSharing}
           onToggleMic={toggleMic}
           onToggleCam={toggleCamera}
+          onToggleScreenShare={toggleScreenShare}
           onToggleChat={() => setChatOpen((prev) => !prev)}
           onLeave={() => {
             leaveMeeting();

@@ -6,7 +6,7 @@ export function ProtectedRoute({ children }: { children: ReactElement }) {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth/login" replace />;
   }
 
   return children;

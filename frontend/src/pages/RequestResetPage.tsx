@@ -34,7 +34,10 @@ export function RequestResetPage() {
   }
 
   return (
-    <AuthPageShell title="Request Password Reset" subtitle="Send code to your email">
+    <AuthPageShell
+      title="Request Password Reset"
+      subtitle="Send code to your email"
+    >
       <StatusMessage info={info} error={error} />
       <RequestResetForm loading={loading} onSubmit={handleRequestReset} />
     </AuthPageShell>

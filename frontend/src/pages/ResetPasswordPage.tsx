@@ -34,7 +34,10 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <AuthPageShell title="Reset Password" subtitle="Enter reset code and new password">
+    <AuthPageShell
+      title="Reset Password"
+      subtitle="Enter reset code and new password"
+    >
       <StatusMessage info={info} error={error} />
       <ResetPasswordForm loading={loading} onSubmit={handleResetPassword} />
     </AuthPageShell>

@@ -18,7 +18,7 @@ export function RoomsPage() {
   const [error, setError] = useState("");
 
   if (!auth.isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth/login" replace />;
   }
 
   function resetStatus() {

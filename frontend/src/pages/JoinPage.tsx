@@ -17,7 +17,7 @@ export function JoinPage() {
               Create Room
             </button>
           ) : (
-            <button type="button" onClick={() => navigate("/auth")}>
+            <button type="button" onClick={() => navigate("/auth/login")}>
               Sign in to Create Room
             </button>
           )}
