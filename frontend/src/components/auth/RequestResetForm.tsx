@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import type { RequestResetPayload } from "../../types/auth";
+import { Link } from "react-router-dom";
 
 type RequestResetFormProps = {
   loading: boolean;
@@ -8,10 +9,10 @@ type RequestResetFormProps = {
 
 export function RequestResetForm({ loading, onSubmit }: RequestResetFormProps) {
   const [email, setEmail] = useState("");
-
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     await onSubmit({ email });
+    console.log("ok");
   }
 
   return (
@@ -28,6 +29,15 @@ export function RequestResetForm({ loading, onSubmit }: RequestResetFormProps) {
       <button disabled={loading} type="submit">
         Send Code
       </button>
+
+      {/* return for the main auth */}
+      <p className="small">
+        Already have an account? <Link to="/auth/login">Login</Link>
+      </p>
+
+      <p className="small">
+        Don't have an account? <Link to="/auth/register">Register</Link>
+      </p>
     </form>
   );
 }

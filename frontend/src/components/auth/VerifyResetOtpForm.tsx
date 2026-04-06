@@ -1,36 +1,28 @@
 import { useState, type FormEvent } from "react";
 import type { VerifyResetOtpPayload } from "../../types/auth";
+import { Navigate } from "react-router-dom";
 
 type VerifyResetOtpFormProps = {
   loading: boolean;
-  defaultEmail?: string;
   onSubmit: (payload: VerifyResetOtpPayload) => Promise<void>;
 };
 
 export function VerifyResetOtpForm({
   loading,
-  defaultEmail,
   onSubmit,
 }: VerifyResetOtpFormProps) {
-  const [email, setEmail] = useState(defaultEmail || "");
   const [otp, setOtp] = useState("");
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    await onSubmit({ email, otp });
+    await onSubmit({ otp });
+    <Navigate to="/auth/" />;
   }
 
   return (
     <form className="card" onSubmit={handleSubmit}>
       <h2>Verify Reset Code</h2>
       <p className="small">Step 2 of 3: Enter the OTP sent to your email</p>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        required
-      />
       <input
         type="text"
         placeholder="OTP (6 digits)"
@@ -43,6 +35,8 @@ export function VerifyResetOtpForm({
       <button disabled={loading} type="submit">
         Verify OTP
       </button>
+
+      {/* button for resend the otp and link to move to the login page*/}
     </form>
   );
 }

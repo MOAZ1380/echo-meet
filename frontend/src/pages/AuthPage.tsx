@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { LoginForm } from "../components/auth/LoginForm";
 import { RegisterForm } from "../components/auth/RegisterForm";
 import { RequestResetForm } from "../components/auth/RequestResetForm";
@@ -16,7 +16,6 @@ export function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
-
   if (auth.isAuthenticated) {
     return <Navigate to="/rooms" replace />;
   }
@@ -55,9 +54,13 @@ export function AuthPage() {
   async function handleRequestReset(payload: RequestResetPayload) {
     setLoading(true);
     resetStatus();
+    const navigate = useNavigate();
     try {
       const message = await auth.requestPasswordReset(payload);
       setInfo(message || "Reset code sent");
+      navigate("/auth/verify-reset-otp", {
+        state: { email: payload.email },
+      });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Cannot request reset code",
@@ -70,8 +73,6 @@ export function AuthPage() {
   return (
     <main className="app">
       <h1>Echo Meet</h1>
-      <h2 className="accent">Auth Page</h2>
-      <p className="small">Simple auth page</p>
 
       <StatusMessage info={info} error={error} />
 

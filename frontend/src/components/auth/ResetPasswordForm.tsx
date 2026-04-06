@@ -9,8 +9,6 @@ type ResetPasswordFormProps = {
 };
 
 export function ResetPasswordForm({
-  email,
-  resetToken,
   loading,
   onSubmit,
 }: ResetPasswordFormProps) {
@@ -27,15 +25,13 @@ export function ResetPasswordForm({
     }
 
     setValidationError("");
-    await onSubmit({ email, resetToken, newPassword });
+    await onSubmit({ newPassword });
   }
 
   return (
     <form className="card" onSubmit={handleSubmit}>
       <h2>Reset Password</h2>
       <p className="small">Step 3 of 3: Choose a new password</p>
-      <input type="email" placeholder="Email" value={email} disabled />
-      <input type="hidden" value={resetToken} readOnly />
       <input
         type="password"
         placeholder="New password"

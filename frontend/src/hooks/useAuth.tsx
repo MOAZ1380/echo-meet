@@ -29,9 +29,16 @@ type AuthContextValue = {
   register: (payload: RegisterPayload) => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
   requestPasswordReset: (payload: RequestResetPayload) => Promise<string>;
-  verifyPasswordResetOtp: (payload: VerifyResetOtpPayload) => Promise<string>;
-  resetPassword: (payload: ResetPasswordPayload) => Promise<string>;
+  verifyPasswordResetOtp: (
+    token: string,
+    payload: VerifyResetOtpPayload,
+  ) => Promise<string>;
+  resetPassword: (
+    token: string,
+    payload: ResetPasswordPayload,
+  ) => Promise<string>;
   logout: () => void;
+  getResetToken: () => string;
 };
 
 const TOKEN_KEY = "echo_token";
@@ -68,6 +75,11 @@ function getStoredUser(): AuthUser | null {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string>(getStoredToken());
   const [user, setUser] = useState<AuthUser | null>(getStoredUser());
+  const [resetToken, setResetToken] = useState<string>("");
+
+  function getResetToken() {
+    return resetToken;
+  }
 
   function setAuth(auth: AuthResponse) {
     setToken(auth.accessToken);
@@ -87,16 +99,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function requestPasswordReset(payload: RequestResetPayload) {
     const result = await requestPasswordResetApi(payload);
+    setResetToken(result.resetToken);
     return result.message;
   }
 
-  async function verifyPasswordResetOtp(payload: VerifyResetOtpPayload) {
-    const result = await verifyPasswordResetOtpApi(payload);
+  async function verifyPasswordResetOtp(
+    token: string,
+    payload: VerifyResetOtpPayload,
+  ) {
+    const result = await verifyPasswordResetOtpApi(token, payload);
+    setResetToken(result.resetToken);
+
     return result.resetToken;
   }
 
-  async function resetPassword(payload: ResetPasswordPayload) {
-    const result = await resetPasswordApi(payload);
+  async function resetPassword(token: string, payload: ResetPasswordPayload) {
+    const result = await resetPasswordApi(token, payload);
+    setResetToken("");
     return result.message;
   }
 
@@ -110,13 +129,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       token,
       user,
-      isAuthenticated: Boolean(token),
+      isAuthenticated: Boolean(token && user?.id),
       register,
       login,
       requestPasswordReset,
       verifyPasswordResetOtp,
       resetPassword,
       logout,
+      getResetToken,
     }),
     [token, user],
   );

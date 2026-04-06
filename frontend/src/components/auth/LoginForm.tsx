@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import type { LoginPayload } from "../../types/auth";
+import { Link } from "react-router-dom";
 
 type LoginFormProps = {
   loading: boolean;
@@ -36,6 +37,16 @@ export function LoginForm({ loading, onSubmit }: LoginFormProps) {
       <button disabled={loading} type="submit">
         Login
       </button>
+
+      {/* reset password link */}
+      <p className="small">
+        <Link to="/auth/request-reset">Forgot your password?</Link>
+      </p>
+
+      {/* Register by email */}
+      <p className="small">
+        Don't have an account? <Link to="/auth/register">Register</Link>
+      </p>
     </form>
   );
 }
