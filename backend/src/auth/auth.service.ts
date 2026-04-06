@@ -13,10 +13,12 @@ import { RegisterDto } from './dto/register.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyPasswordResetOtpDto } from './dto/verify-password-reset-otp.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly prisma: PrismaService,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
@@ -119,17 +121,28 @@ export class AuthService {
 
     await this.emailService.sendPasswordResetOtp(user.email, otp);
 
+    // generate token for 10 minutes of validity to allow OTP verification without email access after OTP generation
+    const resetToken = this.createPasswordResetToken({
+      id: user.id,
+      email: user.email,
+    });
+
     return {
       message: 'Reset OTP sent to your email',
       expiresAt: resetOtpExpiresAt,
+      resetToken,
     };
   }
 
   /**
    * Verifies the reset OTP and returns a temporary reset token.
    */
-  async verifyPasswordResetOtp(data: VerifyPasswordResetOtpDto) {
-    const user = await this.userService.findByEmailWithPassword(data.email);
+  async verifyPasswordResetOtp(
+    userId: string,
+    data: VerifyPasswordResetOtpDto,
+  ) {
+    // email from token
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (!user || !user.resetOtpHash || !user.resetOtpExpiresAt) {
       throw new BadRequestException('Invalid or expired OTP');
@@ -157,35 +170,10 @@ export class AuthService {
   /**
    * Resets password using a verified reset token.
    */
-  async resetPassword(data: ResetPasswordDto) {
-    const user = await this.userService.findByEmailWithPassword(data.email);
+  async resetPassword(userId: string, data: ResetPasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
-    if (!user || !user.resetOtpHash || !user.resetOtpExpiresAt) {
-      throw new BadRequestException('Invalid or expired OTP');
-    }
-
-    if (user.resetOtpExpiresAt.getTime() < Date.now()) {
-      throw new BadRequestException('Invalid or expired OTP');
-    }
-
-    let payload: { sub?: string; email?: string; purpose?: string };
-
-    try {
-      payload = this.jwtService.verify(data.resetToken) as {
-        sub?: string;
-        email?: string;
-        purpose?: string;
-      };
-    } catch {
-      throw new BadRequestException('Invalid or expired reset token');
-    }
-
-    const tokenMatchesUser =
-      payload.purpose === 'password-reset' &&
-      payload.sub === user.id &&
-      payload.email === user.email;
-
-    if (!tokenMatchesUser) {
+    if (!user) {
       throw new BadRequestException('Invalid or expired reset token');
     }
 

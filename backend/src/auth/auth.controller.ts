@@ -1,10 +1,11 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyPasswordResetOtpDto } from './dto/verify-password-reset-otp.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -38,15 +39,17 @@ export class AuthController {
    * Verifies OTP and returns a short-lived reset token.
    */
   @Post('verify-password-reset-otp')
-  verifyPasswordResetOtp(@Body() data: VerifyPasswordResetOtpDto) {
-    return this.authService.verifyPasswordResetOtp(data);
+  @UseGuards(JwtAuthGuard)
+  verifyPasswordResetOtp(@Req() req, @Body() data: VerifyPasswordResetOtpDto) {
+    return this.authService.verifyPasswordResetOtp(req.userId, data);
   }
 
   /**
    * Resets password using a previously verified reset token.
    */
   @Post('reset-password')
-  resetPassword(@Body() data: ResetPasswordDto) {
-    return this.authService.resetPassword(data);
+  @UseGuards(JwtAuthGuard)
+  resetPassword(@Req() req, @Body() data: ResetPasswordDto) {
+    return this.authService.resetPassword(req.userId, data);
   }
 }

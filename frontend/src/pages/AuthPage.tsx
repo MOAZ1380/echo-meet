@@ -70,6 +70,7 @@ export function AuthPage() {
   return (
     <main className="app">
       <h1>Echo Meet</h1>
+      <h2 className="accent">Auth Page</h2>
       <p className="small">Simple auth page</p>
 
       <StatusMessage info={info} error={error} />

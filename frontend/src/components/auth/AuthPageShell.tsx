@@ -7,11 +7,7 @@ type AuthPageShellProps = {
   children: ReactNode;
 };
 
-export function AuthPageShell({
-  title,
-  subtitle,
-  children,
-}: AuthPageShellProps) {
+export function AuthPageShell({ subtitle, children }: AuthPageShellProps) {
   return (
     <main className="app auth-shell">
       <h1>Echo Meet</h1>
@@ -25,10 +21,7 @@ export function AuthPageShell({
         <Link to="/auth/reset-password">Reset: Step 3</Link>
       </section>
 
-      <section className="card">
-        <h2>{title}</h2>
-        {children}
-      </section>
+      <section className="card">{children}</section>
     </main>
   );
 }
