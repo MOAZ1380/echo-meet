@@ -12,6 +12,13 @@ import {
   resetPassword as resetPasswordApi,
   verifyPasswordResetOtp as verifyPasswordResetOtpApi,
 } from "../api/authApi";
+import {
+  deleteCookie,
+  getCookie,
+  getJsonCookie,
+  setCookie,
+  setJsonCookie,
+} from "../utils/cookies";
 import type {
   AuthResponse,
   AuthUser,
@@ -48,33 +55,31 @@ const RESET_TOKEN_KEY = "echo_reset_token";
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function persistAuth(auth: AuthResponse) {
-  localStorage.setItem(TOKEN_KEY, auth.accessToken);
-  localStorage.setItem(USER_KEY, JSON.stringify(auth.user));
+  setCookie(TOKEN_KEY, auth.accessToken, { expiresDays: 7 });
+  setJsonCookie(USER_KEY, auth.user, { expiresDays: 7 });
 }
 
 function clearAuthPersistence() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
+  deleteCookie(TOKEN_KEY);
+  deleteCookie(USER_KEY);
 }
 
 function getStoredToken() {
-  return localStorage.getItem(TOKEN_KEY) ?? "";
+  return getCookie(TOKEN_KEY) ?? "";
 }
 
 function getStoredUser(): AuthUser | null {
-  const raw = localStorage.getItem(USER_KEY);
-  if (!raw) return null;
-
-  try {
-    return JSON.parse(raw) as AuthUser;
-  } catch {
+  const user = getJsonCookie<AuthUser>(USER_KEY);
+  if (!user) {
     clearAuthPersistence();
     return null;
   }
+
+  return user;
 }
 
 function getStoredResetToken() {
-  return localStorage.getItem(RESET_TOKEN_KEY) ?? "";
+  return getCookie(RESET_TOKEN_KEY) ?? "";
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -105,7 +110,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function requestPasswordReset(payload: RequestResetPayload) {
     const result = await requestPasswordResetApi(payload);
     setResetToken(result.resetToken);
-    localStorage.setItem(RESET_TOKEN_KEY, result.resetToken);
+    setCookie(RESET_TOKEN_KEY, result.resetToken, {
+      maxAgeSeconds: 10 * 60,
+    });
     return result.message;
   }
 
@@ -115,7 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) {
     const result = await verifyPasswordResetOtpApi(token, payload);
     setResetToken(result.resetToken);
-    localStorage.setItem(RESET_TOKEN_KEY, result.resetToken);
+    setCookie(RESET_TOKEN_KEY, result.resetToken, {
+      maxAgeSeconds: 10 * 60,
+    });
 
     return result.resetToken;
   }
@@ -123,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function resetPassword(token: string, payload: ResetPasswordPayload) {
     const result = await resetPasswordApi(token, payload);
     setResetToken("");
-    localStorage.removeItem(RESET_TOKEN_KEY);
+    deleteCookie(RESET_TOKEN_KEY);
     return result.message;
   }
 
@@ -132,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setResetToken("");
     clearAuthPersistence();
-    localStorage.removeItem(RESET_TOKEN_KEY);
+    deleteCookie(RESET_TOKEN_KEY);
   }
 
   const value = useMemo<AuthContextValue>(
