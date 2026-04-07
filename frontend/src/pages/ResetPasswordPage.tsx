@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { AuthPageShell } from "../components/auth/AuthPageShell";
 import { ResetPasswordForm } from "../components/auth/ResetPasswordForm";
 import { StatusMessage } from "../components/common/StatusMessage";
@@ -7,18 +7,21 @@ import { useAuth } from "../hooks/useAuth";
 import type { ResetPasswordPayload } from "../types/auth";
 
 export function ResetPasswordPage() {
-  const navigate = useNavigate();
   const auth = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
+  const [isResetCompleted, setIsResetCompleted] = useState(false);
 
   const token = auth.getResetToken();
 
+  if (isResetCompleted) {
+    return <Navigate to="/auth/login" replace />;
+  }
+
   if (!token) {
-    navigate("/auth/request-reset");
-    return;
+    return <Navigate to="/auth/request-reset" replace />;
   }
 
   if (auth.isAuthenticated) {
@@ -34,7 +37,7 @@ export function ResetPasswordPage() {
       await auth.resetPassword(token, payload);
 
       setInfo("Password reset please login again");
-      navigate("/auth");
+      setIsResetCompleted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reset password failed");
     } finally {

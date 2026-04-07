@@ -2,8 +2,6 @@ import { useState, type FormEvent } from "react";
 import type { ResetPasswordPayload } from "../../types/auth";
 
 type ResetPasswordFormProps = {
-  email: string;
-  resetToken: string;
   loading: boolean;
   onSubmit: (payload: ResetPasswordPayload) => Promise<void>;
 };
