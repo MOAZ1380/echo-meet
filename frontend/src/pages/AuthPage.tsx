@@ -13,6 +13,7 @@ import type {
 
 export function AuthPage() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
@@ -54,7 +55,6 @@ export function AuthPage() {
   async function handleRequestReset(payload: RequestResetPayload) {
     setLoading(true);
     resetStatus();
-    const navigate = useNavigate();
     try {
       const message = await auth.requestPasswordReset(payload);
       setInfo(message || "Reset code sent");

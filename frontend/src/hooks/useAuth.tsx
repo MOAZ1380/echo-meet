@@ -43,6 +43,7 @@ type AuthContextValue = {
 
 const TOKEN_KEY = "echo_token";
 const USER_KEY = "echo_user";
+const RESET_TOKEN_KEY = "echo_reset_token";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -72,10 +73,14 @@ function getStoredUser(): AuthUser | null {
   }
 }
 
+function getStoredResetToken() {
+  return localStorage.getItem(RESET_TOKEN_KEY) ?? "";
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string>(getStoredToken());
   const [user, setUser] = useState<AuthUser | null>(getStoredUser());
-  const [resetToken, setResetToken] = useState<string>("");
+  const [resetToken, setResetToken] = useState<string>(getStoredResetToken());
 
   function getResetToken() {
     return resetToken;
@@ -100,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function requestPasswordReset(payload: RequestResetPayload) {
     const result = await requestPasswordResetApi(payload);
     setResetToken(result.resetToken);
+    localStorage.setItem(RESET_TOKEN_KEY, result.resetToken);
     return result.message;
   }
 
@@ -109,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) {
     const result = await verifyPasswordResetOtpApi(token, payload);
     setResetToken(result.resetToken);
+    localStorage.setItem(RESET_TOKEN_KEY, result.resetToken);
 
     return result.resetToken;
   }
@@ -116,13 +123,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function resetPassword(token: string, payload: ResetPasswordPayload) {
     const result = await resetPasswordApi(token, payload);
     setResetToken("");
+    localStorage.removeItem(RESET_TOKEN_KEY);
     return result.message;
   }
 
   function logout() {
     setToken("");
     setUser(null);
+    setResetToken("");
     clearAuthPersistence();
+    localStorage.removeItem(RESET_TOKEN_KEY);
   }
 
   const value = useMemo<AuthContextValue>(

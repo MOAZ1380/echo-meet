@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react";
 import type { VerifyResetOtpPayload } from "../../types/auth";
-import { Navigate } from "react-router-dom";
 
 type VerifyResetOtpFormProps = {
   loading: boolean;
@@ -16,7 +15,6 @@ export function VerifyResetOtpForm({
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     await onSubmit({ otp });
-    <Navigate to="/auth/" />;
   }
 
   return (
