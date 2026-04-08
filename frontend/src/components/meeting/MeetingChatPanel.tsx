@@ -23,14 +23,18 @@ export function MeetingChatPanel({
 
   return (
     <aside className="meeting-chat-panel">
-      <h3>In-call chat</h3>
+      <header className="meeting-chat-header">
+        <h3>In-call chat</h3>
+        <span>{messages.length} messages</span>
+      </header>
+
       <div className="meeting-chat-list">
         {messages.length ? (
           messages.map((item) => (
-            <p key={item.id} className="meeting-chat-item">
-              <strong>{item.sender}: </strong>
-              {item.text}
-            </p>
+            <article key={item.id} className="meeting-chat-item">
+              <p className="meeting-chat-sender">{item.sender}</p>
+              <p className="meeting-chat-text">{item.text}</p>
+            </article>
           ))
         ) : (
           <p className="small">No messages yet.</p>

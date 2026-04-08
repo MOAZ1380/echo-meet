@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MeetingChatPanel } from "../components/meeting/MeetingChatPanel";
 import { MeetingControls } from "../components/meeting/MeetingControls";
+import { ParticipantsPanel } from "../components/meeting/ParticipantsPanel";
 import { VideoTile } from "../components/meeting/VideoTile";
 import { useAuth } from "../hooks/useAuth";
 import { useMeetingRoom } from "../hooks/useMeetingRoom";
@@ -11,6 +12,7 @@ export function MeetingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
+  const [participantsOpen, setParticipantsOpen] = useState(false);
   const [displayName, setDisplayName] = useState(() => user?.email || "Guest");
   const [isReady, setIsReady] = useState(false);
 
@@ -95,11 +97,18 @@ export function MeetingPage() {
           messages={chatMessages}
           onSend={sendChatMessage}
         />
+        <ParticipantsPanel
+          isOpen={participantsOpen}
+          localName={displayName}
+          participants={remoteParticipants}
+        />
       </section>
 
       <footer className="meeting-bottombar">
         <div className="meeting-name-input">
+          <label htmlFor="displayName">Display name</label>
           <input
+            id="displayName"
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             placeholder="Your name"
@@ -113,12 +122,28 @@ export function MeetingPage() {
           onToggleMic={toggleMic}
           onToggleCam={toggleCamera}
           onToggleScreenShare={toggleScreenShare}
-          onToggleChat={() => setChatOpen((prev) => !prev)}
+          onToggleChat={() => {
+            setChatOpen((prev) => !prev);
+            setParticipantsOpen(false);
+          }}
           onLeave={() => {
             leaveMeeting();
             navigate("/join");
           }}
         />
+
+        <div className="meeting-secondary-controls">
+          <button
+            type="button"
+            onClick={() => {
+              setParticipantsOpen((prev) => !prev);
+              setChatOpen(false);
+            }}
+            className={participantsOpen ? "active" : ""}
+          >
+            Participants
+          </button>
+        </div>
 
         <div className="meeting-ready">
           {isReady ? "Connected" : "Connecting..."}

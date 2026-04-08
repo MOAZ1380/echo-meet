@@ -24,28 +24,28 @@ export function MeetingControls({
       <button
         type="button"
         onClick={onToggleMic}
-        className={micEnabled ? "" : "danger"}
+        className={micEnabled ? "control-btn" : "control-btn danger"}
       >
-        {micEnabled ? "Mute Mic" : "Unmute Mic"}
+        {micEnabled ? "Mute" : "Unmute"}
       </button>
       <button
         type="button"
         onClick={onToggleCam}
-        className={camEnabled ? "" : "danger"}
+        className={camEnabled ? "control-btn" : "control-btn danger"}
       >
-        {camEnabled ? "Turn Camera Off" : "Turn Camera On"}
+        {camEnabled ? "Camera" : "Camera Off"}
       </button>
       <button
         type="button"
         onClick={onToggleScreenShare}
-        className={isScreenSharing ? "danger" : ""}
+        className={isScreenSharing ? "control-btn active" : "control-btn"}
       >
-        {isScreenSharing ? "Stop Share" : "Share Screen"}
+        {isScreenSharing ? "Stop Share" : "Share"}
       </button>
-      <button type="button" onClick={onToggleChat}>
+      <button type="button" onClick={onToggleChat} className="control-btn">
         Chat
       </button>
-      <button type="button" onClick={onLeave} className="danger">
+      <button type="button" onClick={onLeave} className="control-btn danger">
         Leave
       </button>
     </div>

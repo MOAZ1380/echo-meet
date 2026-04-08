@@ -16,28 +16,42 @@ export function RoomControls({
   onJoinRoom,
 }: RoomControlsProps) {
   return (
-    <div className="card">
-      <h2>Rooms</h2>
-      <div className="inline">
-        <button disabled={loading} onClick={onCreateRoom} type="button">
-          Create Room
+    <section className="rooms-controls-card">
+      <header>
+        <h2>Room Controls</h2>
+        <p className="small">Create, list, and join meetings by room id.</p>
+      </header>
+
+      <div className="rooms-controls-actions">
+        <button
+          disabled={loading}
+          onClick={onCreateRoom}
+          type="button"
+          className="primary"
+        >
+          {loading ? "Working..." : "Create Room"}
         </button>
         <button disabled={loading} onClick={onLoadRooms} type="button">
           Load Rooms
         </button>
       </div>
 
-      <div className="inline">
+      <div className="rooms-join-box">
         <input
           type="text"
-          placeholder="Room ID"
+          placeholder="Paste room id"
           value={roomIdInput}
           onChange={(event) => setRoomIdInput(event.target.value)}
         />
-        <button disabled={loading} onClick={onJoinRoom} type="button">
+        <button
+          disabled={loading}
+          onClick={onJoinRoom}
+          type="button"
+          className="primary"
+        >
           Join Room
         </button>
       </div>
-    </div>
+    </section>
   );
 }

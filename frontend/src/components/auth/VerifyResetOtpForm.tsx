@@ -18,23 +18,26 @@ export function VerifyResetOtpForm({
   }
 
   return (
-    <form className="card" onSubmit={handleSubmit}>
-      <h2>Verify Reset Code</h2>
-      <p className="small">Step 2 of 3: Enter the OTP sent to your email</p>
-      <input
-        type="text"
-        placeholder="OTP (6 digits)"
-        value={otp}
-        onChange={(event) => setOtp(event.target.value)}
-        pattern="\d{6}"
-        maxLength={6}
-        required
-      />
-      <button disabled={loading} type="submit">
-        Verify OTP
-      </button>
+    <form className="auth-form" onSubmit={handleSubmit}>
+      <h2>Verify code</h2>
+      <p className="small">Step 2 of 3: enter the 6-digit OTP sent to you.</p>
 
-      {/* button for resend the otp and link to move to the login page*/}
+      <label className="auth-field">
+        <span>OTP code</span>
+        <input
+          type="text"
+          placeholder="000000"
+          value={otp}
+          onChange={(event) => setOtp(event.target.value)}
+          pattern="\d{6}"
+          maxLength={6}
+          required
+        />
+      </label>
+
+      <button disabled={loading} type="submit" className="auth-primary-btn">
+        {loading ? "Verifying..." : "Verify OTP"}
+      </button>
     </form>
   );
 }

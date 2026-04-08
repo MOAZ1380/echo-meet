@@ -17,36 +17,43 @@ export function LoginForm({ loading, onSubmit }: LoginFormProps) {
   }
 
   return (
-    <form className="card" onSubmit={handleSubmit}>
-      <h2>Login</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        minLength={6}
-        required
-      />
-      <button disabled={loading} type="submit">
-        Login
+    <form className="auth-form" onSubmit={handleSubmit}>
+      <h2>Sign in</h2>
+      <p className="small">Access your rooms and create new meetings.</p>
+
+      <label className="auth-field">
+        <span>Email</span>
+        <input
+          type="email"
+          placeholder="name@company.com"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
+        />
+      </label>
+
+      <label className="auth-field">
+        <span>Password</span>
+        <input
+          type="password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          minLength={6}
+          required
+        />
+      </label>
+
+      <button disabled={loading} type="submit" className="auth-primary-btn">
+        {loading ? "Signing in..." : "Login"}
       </button>
 
-      {/* reset password link */}
-      <p className="small">
+      <div className="auth-foot-links">
         <Link to="/auth/request-reset">Forgot your password?</Link>
-      </p>
-
-      {/* Register by email */}
-      <p className="small">
-        Don't have an account? <Link to="/auth/register">Register</Link>
-      </p>
+        <span>
+          Don't have an account? <Link to="/auth/register">Register</Link>
+        </span>
+      </div>
     </form>
   );
 }

@@ -9,35 +9,40 @@ type RequestResetFormProps = {
 
 export function RequestResetForm({ loading, onSubmit }: RequestResetFormProps) {
   const [email, setEmail] = useState("");
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     await onSubmit({ email });
-    console.log("ok");
   }
 
   return (
-    <form className="card" onSubmit={handleSubmit}>
-      <h2>Request Reset Code</h2>
-      <p className="small">Step 1 of 3: Enter your email</p>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        required
-      />
-      <button disabled={loading} type="submit">
-        Send Code
+    <form className="auth-form" onSubmit={handleSubmit}>
+      <h2>Request reset code</h2>
+      <p className="small">Step 1 of 3: enter your account email.</p>
+
+      <label className="auth-field">
+        <span>Email</span>
+        <input
+          type="email"
+          placeholder="name@company.com"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
+        />
+      </label>
+
+      <button disabled={loading} type="submit" className="auth-primary-btn">
+        {loading ? "Sending code..." : "Send Code"}
       </button>
 
-      {/* return for the main auth */}
-      <p className="small">
-        Already have an account? <Link to="/auth/login">Login</Link>
-      </p>
-
-      <p className="small">
-        Don't have an account? <Link to="/auth/register">Register</Link>
-      </p>
+      <div className="auth-foot-links">
+        <span>
+          Already have an account? <Link to="/auth/login">Login</Link>
+        </span>
+        <span>
+          Don't have an account? <Link to="/auth/register">Register</Link>
+        </span>
+      </div>
     </form>
   );
 }

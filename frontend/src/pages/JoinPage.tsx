@@ -9,43 +9,59 @@ export function JoinPage() {
 
   return (
     <main className="landing-page">
-      <header className="landing-header">
-        <div className="brand">Echo Meet</div>
-        <div className="landing-actions">
-          {isAuthenticated ? (
-            <button type="button" onClick={() => navigate("/rooms")}>
-              Create Room
-            </button>
-          ) : (
-            <button type="button" onClick={() => navigate("/auth/login")}>
-              Sign in to Create Room
-            </button>
-          )}
+      <section className="landing-shell">
+        <div className="landing-left">
+          <p className="landing-eyebrow">Live collaboration platform</p>
+          <h1>Echo Meet</h1>
+          <p>
+            Join meetings instantly with a room code. Sign in when you want to
+            create and manage rooms.
+          </p>
+
+          <ul className="landing-feature-list">
+            <li>HD video meetings</li>
+            <li>In-call chat with realtime updates</li>
+            <li>No account needed to join</li>
+          </ul>
         </div>
-      </header>
 
-      <section className="landing-hero">
-        <h1>Video calls for everyone</h1>
-        <p>
-          Join a room directly with room code. No account required for joining.
-        </p>
+        <div className="landing-right">
+          <article className="landing-card">
+            <h2>Join a meeting</h2>
+            <p className="small">Enter the room id you received.</p>
+            <div className="landing-join-box">
+              <input
+                value={roomId}
+                onChange={(event) => setRoomId(event.target.value)}
+                placeholder="Enter room code"
+              />
+              <button
+                type="button"
+                className="primary"
+                onClick={() => {
+                  const value = roomId.trim();
+                  if (!value) return;
+                  navigate(`/meet/${value}`);
+                }}
+              >
+                Join now
+              </button>
+            </div>
+          </article>
 
-        <div className="landing-join-box">
-          <input
-            value={roomId}
-            onChange={(event) => setRoomId(event.target.value)}
-            placeholder="Enter room code"
-          />
-          <button
-            type="button"
-            onClick={() => {
-              const value = roomId.trim();
-              if (!value) return;
-              navigate(`/meet/${value}`);
-            }}
-          >
-            Join Now
-          </button>
+          <article className="landing-card">
+            <h2>Create a room</h2>
+            <p className="small">Create private rooms from your dashboard.</p>
+            {isAuthenticated ? (
+              <button type="button" onClick={() => navigate("/rooms")}>
+                Open rooms dashboard
+              </button>
+            ) : (
+              <button type="button" onClick={() => navigate("/auth/login")}>
+                Sign in to create
+              </button>
+            )}
+          </article>
         </div>
       </section>
     </main>

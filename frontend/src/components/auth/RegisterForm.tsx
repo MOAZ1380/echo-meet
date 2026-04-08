@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import type { RegisterPayload } from "../../types/auth";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 type RegisterFormProps = {
   loading: boolean;
@@ -17,44 +17,46 @@ export function RegisterForm({ loading, onSubmit }: RegisterFormProps) {
       email,
       password,
     });
-    // move to the next page
-    <Navigate to="/auth/request-reset" />;
   }
 
   return (
-    <form className="card" onSubmit={handleSubmit}>
-      <h2>Register</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        minLength={6}
-        required
-      />
-      <p className="small">
-        If name is empty, we will use your email text before @.
-      </p>
-      <button disabled={loading} type="submit">
-        Register
+    <form className="auth-form" onSubmit={handleSubmit}>
+      <h2>Create account</h2>
+      <p className="small">Create an account to start and manage rooms.</p>
+
+      <label className="auth-field">
+        <span>Email</span>
+        <input
+          type="email"
+          placeholder="name@company.com"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
+        />
+      </label>
+
+      <label className="auth-field">
+        <span>Password</span>
+        <input
+          type="password"
+          placeholder="Minimum 6 characters"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          minLength={6}
+          required
+        />
+      </label>
+
+      <button disabled={loading} type="submit" className="auth-primary-btn">
+        {loading ? "Creating account..." : "Register"}
       </button>
 
-      {/* Login by email */}
-      <p className="small">
-        Already have an account? <Link to="/auth/login">Login</Link>
-      </p>
-
-      {/* forget password link */}
-      <p className="small">
+      <div className="auth-foot-links">
+        <span>
+          Already have an account? <Link to="/auth/login">Login</Link>
+        </span>
         <Link to="/auth/request-reset">Forgot your password?</Link>
-      </p>
+      </div>
     </form>
   );
 }

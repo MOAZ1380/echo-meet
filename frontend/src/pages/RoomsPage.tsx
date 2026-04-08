@@ -81,37 +81,40 @@ export function RoomsPage() {
   }
 
   return (
-    <main className="app">
-      <h1>Echo Meet</h1>
-      <p className="small">Create room (account required) then open meeting</p>
+    <main className="rooms-page">
+      <section className="rooms-shell">
+        <header className="rooms-header">
+          <div>
+            <p className="rooms-eyebrow">Rooms dashboard</p>
+            <h1>Echo Meet</h1>
+            <p className="small">Signed in as {auth.user?.email}</p>
+          </div>
 
-      <section className="card">
-        <h2>Account</h2>
-        <div className="inline">
-          <span className="small">Signed in as {auth.user?.email}</span>
-          <button onClick={() => navigate("/join")} type="button">
-            Open Join Page
-          </button>
-          <button onClick={auth.logout} type="button">
-            Logout
-          </button>
-        </div>
-      </section>
+          <div className="rooms-header-actions">
+            <button onClick={() => navigate("/join")} type="button">
+              Open join page
+            </button>
+            <button onClick={auth.logout} type="button" className="danger">
+              Logout
+            </button>
+          </div>
+        </header>
 
-      <StatusMessage info={info} error={error} />
+        <StatusMessage info={info} error={error} />
 
-      <RoomControls
-        loading={loading}
-        roomIdInput={roomIdInput}
-        setRoomIdInput={setRoomIdInput}
-        onCreateRoom={handleCreateRoom}
-        onLoadRooms={handleLoadRooms}
-        onJoinRoom={handleJoinRoom}
-      />
+        <RoomControls
+          loading={loading}
+          roomIdInput={roomIdInput}
+          setRoomIdInput={setRoomIdInput}
+          onCreateRoom={handleCreateRoom}
+          onLoadRooms={handleLoadRooms}
+          onJoinRoom={handleJoinRoom}
+        />
 
-      <section className="card">
-        <h2>Available Rooms</h2>
-        <RoomList rooms={rooms} onSelectRoomId={setRoomIdInput} />
+        <section className="rooms-list-card">
+          <h2>Available Rooms</h2>
+          <RoomList rooms={rooms} onSelectRoomId={setRoomIdInput} />
+        </section>
       </section>
     </main>
   );
