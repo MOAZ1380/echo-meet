@@ -13,10 +13,12 @@ dist-ssr
 *.local
 
 
-# remove .env
+# remove .env from git tracking, but keep the file in the local environment
 .env
-.env.*.local
-!.env.example
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
 
 # Editor directories and files
 .vscode/*
