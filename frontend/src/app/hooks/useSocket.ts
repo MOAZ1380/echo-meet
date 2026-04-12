@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from "react";
 
 /**
  * Mock Socket.io hook for WebRTC signaling and real-time communication
@@ -33,38 +33,38 @@ export const useSocket = (meetingId?: string) => {
       // Simulate connection
       setTimeout(() => {
         setIsConnected(true);
-        
+
         // Add mock participants
         const mockParticipants: Participant[] = [
           {
-            id: 'user-1',
-            name: 'You',
+            id: "user-1",
+            name: "You",
             isMicOn: true,
             isCameraOn: true,
           },
           {
-            id: 'user-2',
-            name: 'Sarah Johnson',
+            id: "user-2",
+            name: "Sarah Johnson",
             isMicOn: true,
             isCameraOn: true,
             isSpeaking: false,
           },
           {
-            id: 'user-3',
-            name: 'Michael Chen',
+            id: "user-3",
+            name: "Michael Chen",
             isMicOn: false,
             isCameraOn: true,
             isSpeaking: false,
           },
           {
-            id: 'user-4',
-            name: 'Emily Davis',
+            id: "user-4",
+            name: "Emily Davis",
             isMicOn: true,
             isCameraOn: false,
             isSpeaking: false,
           },
         ];
-        
+
         setParticipants(mockParticipants);
       }, 1000);
 
@@ -78,15 +78,18 @@ export const useSocket = (meetingId?: string) => {
   }, [meetingId]);
 
   // Join meeting
-  const joinMeeting = useCallback((userName: string) => {
-    // In production, this would emit a 'join-meeting' event to the server
-    console.log('Joining meeting:', meetingId, 'as', userName);
-  }, [meetingId]);
+  const joinMeeting = useCallback(
+    (userName: string) => {
+      // In production, this would emit a 'join-meeting' event to the server
+      console.log("Joining meeting:", meetingId, "as", userName);
+    },
+    [meetingId],
+  );
 
   // Leave meeting
   const leaveMeeting = useCallback(() => {
     // In production, this would emit a 'leave-meeting' event
-    console.log('Leaving meeting:', meetingId);
+    console.log("Leaving meeting:", meetingId);
     setIsConnected(false);
   }, [meetingId]);
 
@@ -94,33 +97,33 @@ export const useSocket = (meetingId?: string) => {
   const sendMessage = useCallback((message: string) => {
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
-      senderId: 'user-1',
-      senderName: 'You',
+      senderId: "user-1",
+      senderName: "You",
       message,
       timestamp: new Date(),
     };
-    
-    setMessages(prev => [...prev, newMessage]);
-    
+
+    setMessages((prev) => [...prev, newMessage]);
+
     // In production, emit message to server
-    console.log('Sending message:', message);
+    console.log("Sending message:", message);
   }, []);
 
   // Toggle participant mic (for demo purposes)
   const toggleParticipantMic = useCallback((participantId: string) => {
-    setParticipants(prev =>
-      prev.map(p =>
-        p.id === participantId ? { ...p, isMicOn: !p.isMicOn } : p
-      )
+    setParticipants((prev) =>
+      prev.map((p) =>
+        p.id === participantId ? { ...p, isMicOn: !p.isMicOn } : p,
+      ),
     );
   }, []);
 
   // Toggle participant camera (for demo purposes)
   const toggleParticipantCamera = useCallback((participantId: string) => {
-    setParticipants(prev =>
-      prev.map(p =>
-        p.id === participantId ? { ...p, isCameraOn: !p.isCameraOn } : p
-      )
+    setParticipants((prev) =>
+      prev.map((p) =>
+        p.id === participantId ? { ...p, isCameraOn: !p.isCameraOn } : p,
+      ),
     );
   }, []);
 
@@ -128,11 +131,11 @@ export const useSocket = (meetingId?: string) => {
   useEffect(() => {
     if (participants.length > 0) {
       const interval = setInterval(() => {
-        setParticipants(prev =>
-          prev.map(p => ({
+        setParticipants((prev) =>
+          prev.map((p) => ({
             ...p,
             isSpeaking: p.isMicOn && Math.random() > 0.8,
-          }))
+          })),
         );
       }, 2000);
 

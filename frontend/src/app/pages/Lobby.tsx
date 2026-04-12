@@ -1,8 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router';
-import { motion } from 'motion/react';
-import { Video, VideoOff, Mic, MicOff, Settings, ArrowRight } from 'lucide-react';
-import { useMediaStream } from '../hooks/useMediaStream';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router";
+import { motion } from "motion/react";
+import {
+  Video,
+  VideoOff,
+  Mic,
+  MicOff,
+  Settings,
+  ArrowRight,
+} from "lucide-react";
+import { useMediaStream } from "../hooks/useMediaStream";
 
 /**
  * Lobby Page Component
@@ -12,7 +19,7 @@ import { useMediaStream } from '../hooks/useMediaStream';
 export const Lobby: React.FC = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState("");
   const [hasRequestedMedia, setHasRequestedMedia] = useState(false);
   const {
     stream,
@@ -47,7 +54,15 @@ export const Lobby: React.FC = () => {
 
   const handleJoinMeeting = () => {
     if (userName.trim()) {
-      navigate(`/meeting/${meetingId}`, { state: { userName: userName.trim() } });
+      navigate(`/meeting/${meetingId}`, {
+        state: {
+          userName: userName.trim(),
+          mediaPreferences: {
+            micOn: isMicOn,
+            cameraOn: isCameraOn,
+          },
+        },
+      });
     }
   };
 
@@ -68,15 +83,20 @@ export const Lobby: React.FC = () => {
               </div>
               <h1 className="text-2xl font-bold text-white">Echo Meet</h1>
             </div>
-            <p className="text-gray-400">Meeting ID: <span className="text-white font-mono">{meetingId}</span></p>
+            <p className="text-gray-400">
+              Meeting ID:{" "}
+              <span className="text-white font-mono">{meetingId}</span>
+            </p>
           </div>
 
           <div className="p-8">
             <div className="grid md:grid-cols-2 gap-8">
               {/* Video Preview */}
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-white mb-4">Camera Preview</h2>
-                
+                <h2 className="text-xl font-semibold text-white mb-4">
+                  Camera Preview
+                </h2>
+
                 <div className="relative aspect-video bg-gray-900 rounded-xl overflow-hidden border border-gray-700">
                   {isCameraOn && stream ? (
                     <video
@@ -105,12 +125,18 @@ export const Lobby: React.FC = () => {
                       onClick={toggleMic}
                       className={`p-4 rounded-full transition-colors ${
                         isMicOn
-                          ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                          : 'bg-red-500 hover:bg-red-600 text-white'
+                          ? "bg-gray-700 hover:bg-gray-600 text-white"
+                          : "bg-red-500 hover:bg-red-600 text-white"
                       }`}
-                      aria-label={isMicOn ? 'Mute microphone' : 'Unmute microphone'}
+                      aria-label={
+                        isMicOn ? "Mute microphone" : "Unmute microphone"
+                      }
                     >
-                      {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                      {isMicOn ? (
+                        <Mic className="w-5 h-5" />
+                      ) : (
+                        <MicOff className="w-5 h-5" />
+                      )}
                     </motion.button>
 
                     <motion.button
@@ -119,19 +145,27 @@ export const Lobby: React.FC = () => {
                       onClick={toggleCamera}
                       className={`p-4 rounded-full transition-colors ${
                         isCameraOn
-                          ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                          : 'bg-red-500 hover:bg-red-600 text-white'
+                          ? "bg-gray-700 hover:bg-gray-600 text-white"
+                          : "bg-red-500 hover:bg-red-600 text-white"
                       }`}
-                      aria-label={isCameraOn ? 'Turn off camera' : 'Turn on camera'}
+                      aria-label={
+                        isCameraOn ? "Turn off camera" : "Turn on camera"
+                      }
                     >
-                      {isCameraOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+                      {isCameraOn ? (
+                        <Video className="w-5 h-5" />
+                      ) : (
+                        <VideoOff className="w-5 h-5" />
+                      )}
                     </motion.button>
                   </div>
                 </div>
 
                 {error && (
                   <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-                    <p className="text-red-400 text-sm font-semibold mb-2">⚠️ Media Access Error</p>
+                    <p className="text-red-400 text-sm font-semibold mb-2">
+                      ⚠️ Media Access Error
+                    </p>
                     <p className="text-red-300 text-sm mb-3">{error}</p>
                     <button
                       onClick={handleRequestMedia}
@@ -140,15 +174,17 @@ export const Lobby: React.FC = () => {
                       Try Again
                     </button>
                     <p className="text-gray-400 text-xs mt-3">
-                      Tip: You can still join the meeting without camera/microphone and enable them later.
+                      Tip: You can still join the meeting without
+                      camera/microphone and enable them later.
                     </p>
                   </div>
                 )}
-                
+
                 {!stream && !error && !hasRequestedMedia && (
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                     <p className="text-blue-300 text-sm mb-3">
-                      📹 Click the button below to test your camera and microphone before joining.
+                      📹 Click the button below to test your camera and
+                      microphone before joining.
                     </p>
                     <motion.button
                       whileHover={{ scale: 1.02 }}
@@ -165,15 +201,21 @@ export const Lobby: React.FC = () => {
               {/* Join Form */}
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-white mb-4">Ready to join?</h2>
+                  <h2 className="text-xl font-semibold text-white mb-4">
+                    Ready to join?
+                  </h2>
                   <p className="text-gray-400 mb-6">
-                    Check your camera and microphone settings before joining the meeting
+                    Check your camera and microphone settings before joining the
+                    meeting
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="userName" className="block text-sm font-medium text-gray-300 mb-2">
+                    <label
+                      htmlFor="userName"
+                      className="block text-sm font-medium text-gray-300 mb-2"
+                    >
                       Your Name
                     </label>
                     <input
@@ -194,13 +236,17 @@ export const Lobby: React.FC = () => {
                         ) : (
                           <MicOff className="w-4 h-4 text-red-400" />
                         )}
-                        <span className="text-sm text-gray-300">Microphone</span>
+                        <span className="text-sm text-gray-300">
+                          Microphone
+                        </span>
                       </div>
-                      <span className={`text-sm ${isMicOn ? 'text-green-400' : 'text-red-400'}`}>
-                        {isMicOn ? 'On' : 'Off'}
+                      <span
+                        className={`text-sm ${isMicOn ? "text-green-400" : "text-red-400"}`}
+                      >
+                        {isMicOn ? "On" : "Off"}
                       </span>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {isCameraOn ? (
@@ -210,8 +256,10 @@ export const Lobby: React.FC = () => {
                         )}
                         <span className="text-sm text-gray-300">Camera</span>
                       </div>
-                      <span className={`text-sm ${isCameraOn ? 'text-green-400' : 'text-red-400'}`}>
-                        {isCameraOn ? 'On' : 'Off'}
+                      <span
+                        className={`text-sm ${isCameraOn ? "text-green-400" : "text-red-400"}`}
+                      >
+                        {isCameraOn ? "On" : "Off"}
                       </span>
                     </div>
                   </div>
@@ -228,7 +276,7 @@ export const Lobby: React.FC = () => {
                   </motion.button>
 
                   <button
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate("/")}
                     className="w-full text-gray-400 hover:text-white py-2 transition-colors"
                   >
                     Cancel

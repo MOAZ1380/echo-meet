@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router';
-import { AnimatePresence } from 'motion/react';
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useParams, useNavigate, useLocation } from "react-router";
+import { AnimatePresence } from "motion/react";
 import {
   Mic,
   MicOff,
@@ -12,58 +12,109 @@ import {
   Users,
   PhoneOff,
   MoreVertical,
-} from 'lucide-react';
-import { Navbar } from '../components/Navbar';
-import { VideoTile } from '../components/VideoTile';
-import { ControlButton } from '../components/ControlButton';
-import { ChatPanel } from '../components/ChatPanel';
-import { ParticipantsPanel } from '../components/ParticipantsPanel';
-import { useMediaStream } from '../hooks/useMediaStream';
-import { useSocket } from '../hooks/useSocket';
+} from "lucide-react";
+import { Navbar } from "../components/Navbar";
+import { VideoTile } from "../components/VideoTile";
+import { ControlButton } from "../components/ControlButton";
+import { ChatPanel } from "../components/ChatPanel";
+import { ParticipantsPanel } from "../components/ParticipantsPanel";
+import { ChatMessage, Participant } from "../hooks/useSocket";
+import { useMeetingRoom } from "../hooks/useMeetingRoom";
 
 /**
  * MeetingRoom Page Component
  * Main meeting interface with video grid, controls, and sidebars
  */
 
-type SidebarType = 'chat' | 'participants' | null;
+type SidebarType = "chat" | "participants" | null;
+
+type MeetingLocationState = {
+  userName?: string;
+  mediaPreferences?: {
+    micOn?: boolean;
+    cameraOn?: boolean;
+  };
+};
 
 export const MeetingRoom: React.FC = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const userName = location.state?.userName || 'Guest';
+  const state = (location.state as MeetingLocationState | null) || null;
+  const userName = state?.userName || "Guest";
+  const initialMicOn = !!state?.mediaPreferences?.micOn;
+  const initialCameraOn = !!state?.mediaPreferences?.cameraOn;
+  const hasInitializedMediaRef = useRef(false);
+  const hasJoinedRoomRef = useRef(false);
 
   const [activeSidebar, setActiveSidebar] = useState<SidebarType>(null);
-  const [meetingDuration, setMeetingDuration] = useState('00:00');
+  const [meetingDuration, setMeetingDuration] = useState("00:00");
   const [showControls, setShowControls] = useState(true);
 
-  // Hooks
   const {
-    stream,
-    isCameraOn,
-    isMicOn,
+    localStream,
+    remoteParticipants,
+    chatMessages,
+    socketStatus,
+    micEnabled,
+    camEnabled,
     isScreenSharing,
+    ensureLocalMedia,
+    joinMeeting,
+    sendChatMessage,
     toggleCamera,
     toggleMic,
-    startScreenShare,
-    stopScreenShare,
-    stopStream,
-  } = useMediaStream();
-
-  const {
-    isConnected,
-    participants,
-    messages,
-    joinMeeting,
     leaveMeeting,
-    sendMessage,
-  } = useSocket(meetingId);
+    toggleScreenShare,
+  } = useMeetingRoom(userName);
 
-  // Initialize meeting
+  // Ensure media is prepared and respects lobby preferences.
   useEffect(() => {
-    joinMeeting(userName);
-  }, [joinMeeting, userName]);
+    let isCancelled = false;
+
+    const initializeMedia = async () => {
+      if (hasInitializedMediaRef.current) return;
+
+      await ensureLocalMedia();
+      if (isCancelled) return;
+
+      if (initialMicOn) {
+        toggleMic();
+      }
+
+      if (initialCameraOn) {
+        toggleCamera();
+      }
+
+      hasInitializedMediaRef.current = true;
+    };
+
+    void initializeMedia();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    ensureLocalMedia,
+    initialCameraOn,
+    initialMicOn,
+    toggleCamera,
+    toggleMic,
+  ]);
+
+  // Join meeting room once when room id is available.
+  useEffect(() => {
+    if (!meetingId || hasJoinedRoomRef.current) return;
+
+    hasJoinedRoomRef.current = true;
+    void joinMeeting(meetingId);
+  }, [joinMeeting, meetingId]);
+
+  useEffect(() => {
+    if (!meetingId) {
+      navigate("/");
+    }
+  }, [meetingId, navigate]);
 
   // Meeting duration timer
   useEffect(() => {
@@ -73,7 +124,7 @@ export const MeetingRoom: React.FC = () => {
       const minutes = Math.floor(elapsed / 60);
       const seconds = elapsed % 60;
       setMeetingDuration(
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`,
       );
     }, 1000);
 
@@ -82,17 +133,17 @@ export const MeetingRoom: React.FC = () => {
 
   // Auto-hide controls after inactivity
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    
+    let timeout: ReturnType<typeof setTimeout>;
+
     const handleMouseMove = () => {
       setShowControls(true);
       clearTimeout(timeout);
       timeout = setTimeout(() => setShowControls(false), 3000);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener("mousemove", handleMouseMove);
       clearTimeout(timeout);
     };
   }, []);
@@ -103,26 +154,60 @@ export const MeetingRoom: React.FC = () => {
 
   const handleLeaveMeeting = () => {
     leaveMeeting();
-    stopStream();
-    navigate('/');
+    navigate("/");
   };
 
   const handleScreenShare = () => {
-    if (isScreenSharing) {
-      stopScreenShare();
-    } else {
-      startScreenShare();
-    }
+    void toggleScreenShare();
   };
+
+  const participants = useMemo<Participant[]>(() => {
+    const localParticipant: Participant = {
+      id: "local-user",
+      name: userName,
+      isMicOn: micEnabled,
+      isCameraOn: camEnabled,
+      isSpeaking: false,
+    };
+
+    const remote = remoteParticipants.map((participant, index) => ({
+      id: participant.id,
+      name: `Participant ${index + 1}`,
+      isMicOn: true,
+      isCameraOn: true,
+      isSpeaking: false,
+    }));
+
+    return [localParticipant, ...remote];
+  }, [camEnabled, micEnabled, remoteParticipants, userName]);
+
+  const messages = useMemo<ChatMessage[]>(() => {
+    return chatMessages.map((message) => {
+      const parts = message.id.split("-");
+      const timestampPart =
+        parts.length >= 2 ? Number(parts[parts.length - 2]) : NaN;
+      const timestamp = Number.isFinite(timestampPart)
+        ? new Date(timestampPart)
+        : new Date();
+
+      return {
+        id: message.id,
+        senderId: message.sender === userName ? "user-1" : message.sender,
+        senderName: message.sender,
+        message: message.text,
+        timestamp,
+      };
+    });
+  }, [chatMessages, userName]);
 
   // Calculate grid layout based on participant count
   const getGridClass = () => {
     const count = participants.length;
-    if (count === 1) return 'grid-cols-1';
-    if (count === 2) return 'grid-cols-2';
-    if (count <= 4) return 'grid-cols-2 grid-rows-2';
-    if (count <= 6) return 'grid-cols-3 grid-rows-2';
-    return 'grid-cols-4 grid-rows-2';
+    if (count === 1) return "grid-cols-1";
+    if (count === 2) return "grid-cols-2";
+    if (count <= 4) return "grid-cols-2 grid-rows-2";
+    if (count <= 6) return "grid-cols-3 grid-rows-2";
+    return "grid-cols-4 grid-rows-2";
   };
 
   return (
@@ -137,20 +222,32 @@ export const MeetingRoom: React.FC = () => {
         {/* Video Grid */}
         <div
           className={`flex-1 p-4 transition-all duration-300 ${
-            activeSidebar ? 'mr-0' : ''
+            activeSidebar ? "mr-0" : ""
           }`}
         >
           <div className={`h-full grid gap-4 ${getGridClass()} auto-rows-fr`}>
-            {participants.map((participant) => (
+            <VideoTile
+              key="local-user"
+              participantId="local-user"
+              participantName={userName}
+              stream={localStream}
+              isCameraOn={camEnabled}
+              isMicOn={micEnabled}
+              isSpeaking={false}
+              isLocal={true}
+              className="min-h-0"
+            />
+
+            {remoteParticipants.map((participant, index) => (
               <VideoTile
                 key={participant.id}
                 participantId={participant.id}
-                participantName={participant.name}
-                stream={participant.id === 'user-1' ? stream : null}
-                isCameraOn={participant.isCameraOn}
-                isMicOn={participant.isMicOn}
-                isSpeaking={participant.isSpeaking}
-                isLocal={participant.id === 'user-1'}
+                participantName={`Participant ${index + 1}`}
+                stream={participant.stream}
+                isCameraOn={true}
+                isMicOn={true}
+                isSpeaking={false}
+                isLocal={false}
                 className="min-h-0"
               />
             ))}
@@ -159,16 +256,16 @@ export const MeetingRoom: React.FC = () => {
 
         {/* Sidebar (Chat or Participants) */}
         <AnimatePresence>
-          {activeSidebar === 'chat' && (
+          {activeSidebar === "chat" && (
             <div className="w-80 flex-shrink-0">
               <ChatPanel
                 messages={messages}
-                onSendMessage={sendMessage}
+                onSendMessage={sendChatMessage}
                 onClose={() => setActiveSidebar(null)}
               />
             </div>
           )}
-          {activeSidebar === 'participants' && (
+          {activeSidebar === "participants" && (
             <div className="w-80 flex-shrink-0">
               <ParticipantsPanel
                 participants={participants}
@@ -185,39 +282,41 @@ export const MeetingRoom: React.FC = () => {
           <div className="flex items-center justify-center gap-3 px-6 py-6">
             {/* Microphone */}
             <ControlButton
-              icon={isMicOn ? <Mic /> : <MicOff />}
-              label={isMicOn ? 'Mute' : 'Unmute'}
+              icon={micEnabled ? <Mic /> : <MicOff />}
+              label={micEnabled ? "Mute" : "Unmute"}
               onClick={toggleMic}
-              isActive={!isMicOn}
-              variant={isMicOn ? 'default' : 'danger'}
-              tooltip={isMicOn ? 'Turn off microphone' : 'Turn on microphone'}
+              isActive={!micEnabled}
+              variant={micEnabled ? "default" : "danger"}
+              tooltip={
+                micEnabled ? "Turn off microphone" : "Turn on microphone"
+              }
             />
 
             {/* Camera */}
             <ControlButton
-              icon={isCameraOn ? <Video /> : <VideoOff />}
-              label={isCameraOn ? 'Camera' : 'Camera'}
+              icon={camEnabled ? <Video /> : <VideoOff />}
+              label={camEnabled ? "Camera" : "Camera"}
               onClick={toggleCamera}
-              isActive={!isCameraOn}
-              variant={isCameraOn ? 'default' : 'danger'}
-              tooltip={isCameraOn ? 'Turn off camera' : 'Turn on camera'}
+              isActive={!camEnabled}
+              variant={camEnabled ? "default" : "danger"}
+              tooltip={camEnabled ? "Turn off camera" : "Turn on camera"}
             />
 
             {/* Screen Share */}
             <ControlButton
               icon={isScreenSharing ? <MonitorOff /> : <Monitor />}
-              label={isScreenSharing ? 'Stop' : 'Share'}
+              label={isScreenSharing ? "Stop" : "Share"}
               onClick={handleScreenShare}
               isActive={isScreenSharing}
-              tooltip={isScreenSharing ? 'Stop sharing' : 'Share screen'}
+              tooltip={isScreenSharing ? "Stop sharing" : "Share screen"}
             />
 
             {/* Chat */}
             <ControlButton
               icon={<MessageSquare />}
               label="Chat"
-              onClick={() => handleToggleSidebar('chat')}
-              isActive={activeSidebar === 'chat'}
+              onClick={() => handleToggleSidebar("chat")}
+              isActive={activeSidebar === "chat"}
               tooltip="Toggle chat"
             />
 
@@ -225,8 +324,8 @@ export const MeetingRoom: React.FC = () => {
             <ControlButton
               icon={<Users />}
               label="People"
-              onClick={() => handleToggleSidebar('participants')}
-              isActive={activeSidebar === 'participants'}
+              onClick={() => handleToggleSidebar("participants")}
+              isActive={activeSidebar === "participants"}
               tooltip="View participants"
             />
 
@@ -252,7 +351,7 @@ export const MeetingRoom: React.FC = () => {
       )}
 
       {/* Connection Status */}
-      {!isConnected && (
+      {socketStatus !== "connected" && (
         <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg">
           <p className="text-sm font-medium">Connecting to meeting...</p>
         </div>

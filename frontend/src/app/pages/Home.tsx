@@ -12,7 +12,7 @@ import { useAuth } from "../hooks/useAuth";
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState("");
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
   // Generate random meeting code
   const generateMeetingCode = () => {
@@ -35,8 +35,7 @@ export const Home: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Header with Login/Register */}
       <div className="absolute top-0 right-0 p-4 sm:p-6 z-10">
-        {/* if isAuthenticated is True block signIn and signUp if False display it */}
-
+        {/* if isAuthenticated is True block signIn and signUp if False display it  and display logout*/}
         {!isAuthenticated && (
           <div className="flex items-center gap-2 sm:gap-3">
             <Link to="/login">
@@ -61,6 +60,18 @@ export const Home: React.FC = () => {
               </motion.button>
             </Link>
           </div>
+        )}
+        {isAuthenticated && (
+          <Link to="/">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-4 sm:px-6 py-2 text-sm sm:text-base text-white hover:text-[var(--echo-primary)] transition-colors font-medium"
+              onClick={logout}
+            >
+              Logout
+            </motion.button>
+          </Link>
         )}
       </div>
 
