@@ -43,7 +43,6 @@ export const Login: React.FC = () => {
     }
 
     try {
-      console.log("login");
       await login({ email, password });
       navigate("/");
     } catch (error) {
