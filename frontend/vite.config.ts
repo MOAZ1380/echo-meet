@@ -1,26 +1,23 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
+import path from "path";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 
-export default ({ mode }: { mode: string }) => {
-  const env = loadEnv(mode, process.cwd());
+// i want add VITE_API_URL the base url for the api to the environment variables
 
-  return defineConfig({
-    plugins: [react()],
-    server: {
-      proxy:
-        mode === "development"
-          ? {
-              "/api": {
-                target: env.VITE_API_URL,
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api/, ""),
-              },
-              "/socket.io": {
-                target: env.VITE_SOCKET_URL,
-                ws: true,
-              },
-            }
-          : undefined,
+export default defineConfig({
+  plugins: [
+    // The React and Tailwind plugins are both required for Make, even if
+    // Tailwind is not being actively used – do not remove them
+    react(),
+    tailwindcss(),
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
     },
-  });
-};
+  },
+
+  // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
+  assetsInclude: ["**/*.svg", "**/*.csv"],
+});
