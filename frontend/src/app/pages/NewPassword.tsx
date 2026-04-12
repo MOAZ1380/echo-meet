@@ -10,7 +10,7 @@ import { useAuth } from "../hooks/useAuth";
  */
 
 export const NewPassword: React.FC = () => {
-  const { resetPassword } = useAuth();
+  const { resetPassword, getResetToken } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const resetCode = location.state?.resetCode || "";
@@ -58,7 +58,7 @@ export const NewPassword: React.FC = () => {
     }
 
     try {
-      await resetPassword(resetCode, { newPassword });
+      await resetPassword(getResetToken(), { newPassword });
       setIsSuccess(true);
       // Redirect to login after short delay
       setTimeout(() => {
