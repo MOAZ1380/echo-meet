@@ -10,7 +10,6 @@ export class LivekitController {
     @Query('userId') userId: string,
     @Query('roomId') roomId: string,
   ) {
-    console.log('Generating token for userId:', userId, 'roomId:', roomId);
     const token = await this.livekitService.createToken(userId, roomId);
     return {
       token: token,
