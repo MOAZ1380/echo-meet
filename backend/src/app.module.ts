@@ -8,6 +8,7 @@ import { EmailModule } from './email/email.module';
 import { RoomModule } from './room/room.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
+import { LivekitModule } from './livekit/livekit.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UserModule } from './user/user.module';
     UserModule,
     AuthModule,
     EmailModule,
+    LivekitModule,
   ],
   controllers: [AppController],
   providers: [AppService, ChatGateway],
