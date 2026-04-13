@@ -14,7 +14,7 @@ import { RoomService } from '../room/room.service';
     origin: '*',
   },
 })
-export class ChatGateway implements OnModuleInit {
+export class MeetingGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
 
@@ -39,10 +39,6 @@ export class ChatGateway implements OnModuleInit {
   ) {
     const room = await this.roomService.createRoom({}, data.userId);
 
-    client.join(room.id);
-
-    console.log(`[Room] Created ${room.id} by ${client.id}`);
-
     client.emit('roomCreated', { roomId: room.id });
   }
 
@@ -51,19 +47,12 @@ export class ChatGateway implements OnModuleInit {
    * Emits: joinedRoom (server -> client), userJoined (server -> room)
    */
   @SubscribeMessage('joinRoom')
-  async joinRoom(
-    @MessageBody() data: { roomId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
+  async joinRoom(@MessageBody() data, @ConnectedSocket() client: Socket) {
     const room = await this.roomService.findOne(data.roomId);
 
     if (!room) {
       return client.emit('error', { message: 'Room not found' });
     }
-
-    client.join(room.id);
-
-    console.log(`[Room] ${client.id} joined ${room.id}`);
 
     client.emit('joinedRoom', { roomId: room.id });
 
