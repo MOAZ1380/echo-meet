@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Send, X } from 'lucide-react';
-import { ChatMessage } from '../hooks/useSocket';
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Send, X } from "lucide-react";
+import type { ChatMessage } from "../types/meeting";
 
 /**
  * ChatPanel Component
@@ -19,26 +19,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   onSendMessage,
   onClose,
 }) => {
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
       onSendMessage(inputValue);
-      setInputValue('');
+      setInputValue("");
     }
   };
 
   const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
+    return new Date(date).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
     });
   };
@@ -48,7 +48,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       initial={{ x: 300, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 300, opacity: 0 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      transition={{ type: "spring", damping: 25, stiffness: 200 }}
       className="h-full bg-gray-800 flex flex-col border-l border-gray-700"
     >
       {/* Header */}
@@ -68,7 +68,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         <AnimatePresence>
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-gray-500 text-sm">No messages yet. Start the conversation!</p>
+              <p className="text-gray-500 text-sm">
+                No messages yet. Start the conversation!
+              </p>
             </div>
           ) : (
             messages.map((msg) => (
@@ -78,21 +80,25 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3 }}
                 className={`chat-message-enter ${
-                  msg.senderId === 'user-1' ? 'ml-8' : 'mr-8'
+                  msg.senderId === "local-user" ? "ml-8" : "mr-8"
                 }`}
               >
                 <div
                   className={`p-3 rounded-lg ${
-                    msg.senderId === 'user-1'
-                      ? 'bg-[var(--echo-primary)] text-white ml-auto'
-                      : 'bg-gray-700 text-white'
+                    msg.senderId === "local-user"
+                      ? "bg-[var(--echo-primary)] text-white ml-auto"
+                      : "bg-gray-700 text-white"
                   }`}
                 >
-                  {msg.senderId !== 'user-1' && (
-                    <p className="text-xs text-gray-400 mb-1">{msg.senderName}</p>
+                  {msg.senderId !== "local-user" && (
+                    <p className="text-xs text-gray-400 mb-1">
+                      {msg.senderName}
+                    </p>
                   )}
                   <p className="text-sm break-words">{msg.message}</p>
-                  <p className="text-xs opacity-70 mt-1">{formatTime(msg.timestamp)}</p>
+                  <p className="text-xs opacity-70 mt-1">
+                    {formatTime(msg.timestamp)}
+                  </p>
                 </div>
               </motion.div>
             ))

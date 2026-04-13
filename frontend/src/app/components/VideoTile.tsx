@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Mic, MicOff } from 'lucide-react';
+import React, { useRef, useEffect } from "react";
+import { motion } from "motion/react";
+import { Mic, MicOff } from "lucide-react";
 
 /**
  * VideoTile Component
@@ -12,6 +12,7 @@ interface VideoTileProps {
   participantName: string;
   stream?: MediaStream | null;
   isCameraOn: boolean;
+  isScreenSharing?: boolean;
   isMicOn: boolean;
   isSpeaking?: boolean;
   isLocal?: boolean;
@@ -23,10 +24,11 @@ export const VideoTile: React.FC<VideoTileProps> = ({
   participantName,
   stream,
   isCameraOn,
+  isScreenSharing = false,
   isMicOn,
   isSpeaking = false,
   isLocal = false,
-  className = '',
+  className = "",
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -40,12 +42,12 @@ export const VideoTile: React.FC<VideoTileProps> = ({
   // Generate avatar color based on name
   const getAvatarColor = (name: string) => {
     const colors = [
-      'bg-blue-500',
-      'bg-green-500',
-      'bg-purple-500',
-      'bg-pink-500',
-      'bg-yellow-500',
-      'bg-indigo-500',
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-purple-500",
+      "bg-pink-500",
+      "bg-yellow-500",
+      "bg-indigo-500",
     ];
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
@@ -54,9 +56,9 @@ export const VideoTile: React.FC<VideoTileProps> = ({
   // Get initials from name
   const getInitials = (name: string) => {
     return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
@@ -68,7 +70,7 @@ export const VideoTile: React.FC<VideoTileProps> = ({
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.3 }}
       className={`relative bg-gray-800 rounded-lg overflow-hidden video-tile-enter ${
-        isSpeaking ? 'speaking-indicator ring-4 ring-[var(--echo-primary)]' : ''
+        isSpeaking ? "speaking-indicator ring-4 ring-[var(--echo-primary)]" : ""
       } ${className}`}
     >
       {/* Video Element */}
@@ -78,11 +80,13 @@ export const VideoTile: React.FC<VideoTileProps> = ({
           autoPlay
           playsInline
           muted={isLocal}
-          className={`w-full h-full object-cover ${isLocal ? 'video-mirror' : ''}`}
+          className={`w-full h-full object-cover ${isLocal && !isScreenSharing ? "video-mirror" : ""}`}
         />
       ) : (
         /* Avatar Fallback */
-        <div className={`w-full h-full flex items-center justify-center ${getAvatarColor(participantName)}`}>
+        <div
+          className={`w-full h-full flex items-center justify-center ${getAvatarColor(participantName)}`}
+        >
           <span className="text-4xl font-semibold text-white">
             {getInitials(participantName)}
           </span>
@@ -95,9 +99,11 @@ export const VideoTile: React.FC<VideoTileProps> = ({
           <span className="text-white text-sm font-medium truncate">
             {participantName}
           </span>
-          
+
           {/* Mic indicator */}
-          <div className={`p-1 rounded ${isMicOn ? 'bg-transparent' : 'bg-red-500'}`}>
+          <div
+            className={`p-1 rounded ${isMicOn ? "bg-transparent" : "bg-red-500"}`}
+          >
             {!isMicOn && <MicOff className="w-4 h-4 text-white" />}
           </div>
         </div>

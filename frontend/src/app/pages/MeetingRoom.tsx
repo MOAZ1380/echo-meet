@@ -18,8 +18,8 @@ import { VideoTile } from "../components/VideoTile";
 import { ControlButton } from "../components/ControlButton";
 import { ChatPanel } from "../components/ChatPanel";
 import { ParticipantsPanel } from "../components/ParticipantsPanel";
-import { ChatMessage, Participant } from "../hooks/useSocket";
-import { useMeetingRoom } from "../hooks/useMeetingRoom";
+import type { Participant } from "../types/meeting";
+import { useMeetingRoom } from "../hooks/useLivekitMeetingRoom";
 
 /**
  * MeetingRoom Page Component
@@ -170,35 +170,16 @@ export const MeetingRoom: React.FC = () => {
       isSpeaking: false,
     };
 
-    const remote = remoteParticipants.map((participant, index) => ({
+    const remote = remoteParticipants.map((participant) => ({
       id: participant.id,
-      name: `Participant ${index + 1}`,
-      isMicOn: true,
-      isCameraOn: true,
-      isSpeaking: false,
+      name: participant.name,
+      isMicOn: participant.isMicOn,
+      isCameraOn: participant.isCameraOn,
+      isSpeaking: participant.isSpeaking,
     }));
 
     return [localParticipant, ...remote];
   }, [camEnabled, micEnabled, remoteParticipants, userName]);
-
-  const messages = useMemo<ChatMessage[]>(() => {
-    return chatMessages.map((message) => {
-      const parts = message.id.split("-");
-      const timestampPart =
-        parts.length >= 2 ? Number(parts[parts.length - 2]) : NaN;
-      const timestamp = Number.isFinite(timestampPart)
-        ? new Date(timestampPart)
-        : new Date();
-
-      return {
-        id: message.id,
-        senderId: message.sender === userName ? "user-1" : message.sender,
-        senderName: message.sender,
-        message: message.text,
-        timestamp,
-      };
-    });
-  }, [chatMessages, userName]);
 
   // Calculate grid layout based on participant count
   const getGridClass = () => {
@@ -231,22 +212,23 @@ export const MeetingRoom: React.FC = () => {
               participantId="local-user"
               participantName={userName}
               stream={localStream}
-              isCameraOn={camEnabled}
+              isCameraOn={camEnabled || isScreenSharing}
+              isScreenSharing={isScreenSharing}
               isMicOn={micEnabled}
               isSpeaking={false}
               isLocal={true}
               className="min-h-0"
             />
 
-            {remoteParticipants.map((participant, index) => (
+            {remoteParticipants.map((participant) => (
               <VideoTile
                 key={participant.id}
                 participantId={participant.id}
-                participantName={`Participant ${index + 1}`}
+                participantName={participant.name}
                 stream={participant.stream}
-                isCameraOn={true}
-                isMicOn={true}
-                isSpeaking={false}
+                isCameraOn={participant.isCameraOn}
+                isMicOn={participant.isMicOn}
+                isSpeaking={participant.isSpeaking}
                 isLocal={false}
                 className="min-h-0"
               />
@@ -259,7 +241,7 @@ export const MeetingRoom: React.FC = () => {
           {activeSidebar === "chat" && (
             <div className="w-80 flex-shrink-0">
               <ChatPanel
-                messages={messages}
+                messages={chatMessages}
                 onSendMessage={sendChatMessage}
                 onClose={() => setActiveSidebar(null)}
               />

@@ -2,26 +2,26 @@
 
 :root {
   /* Echo Meet Brand Colors */
-  --echo-primary: #4F46E5; /* Indigo-600 */
-  --echo-primary-hover: #4338CA; /* Indigo-700 */
-  --echo-primary-light: #818CF8; /* Indigo-400 */
-  --echo-success: #10B981; /* Green-500 */
-  --echo-danger: #EF4444; /* Red-500 */
-  --echo-danger-hover: #DC2626; /* Red-600 */
-  
+  --echo-primary: #4f46e5; /* Indigo-600 */
+  --echo-primary-hover: #4338ca; /* Indigo-700 */
+  --echo-primary-light: #818cf8; /* Indigo-400 */
+  --echo-success: #10b981; /* Green-500 */
+  --echo-danger: #ef4444; /* Red-500 */
+  --echo-danger-hover: #dc2626; /* Red-600 */
+
   /* Dark Theme Colors */
   --echo-dark-bg: #111827; /* Gray-900 */
-  --echo-dark-surface: #1F2937; /* Gray-800 */
+  --echo-dark-surface: #1f2937; /* Gray-800 */
   --echo-dark-surface-hover: #374151; /* Gray-700 */
   --echo-dark-border: #374151; /* Gray-700 */
-  --echo-dark-text: #F9FAFB; /* Gray-50 */
-  --echo-dark-text-secondary: #9CA3AF; /* Gray-400 */
+  --echo-dark-text: #f9fafb; /* Gray-50 */
+  --echo-dark-text-secondary: #9ca3af; /* Gray-400 */
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -37,12 +37,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4B5563;
+  background: #4b5563;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6B7280;
+  background: #6b7280;
 }
 
 /* Smooth Transitions */
@@ -90,7 +90,7 @@ body {
 }
 
 .control-button::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -99,7 +99,9 @@ body {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   transform: translate(-50%, -50%);
-  transition: width 0.3s, height 0.3s;
+  transition:
+    width 0.3s,
+    height 0.3s;
 }
 
 .control-button:hover::before {
@@ -149,11 +151,23 @@ body {
   transform: scaleX(-1);
 }
 
+.video-normal {
+  transform: none;
+}
+
 /* Gradient Overlays */
 .gradient-overlay-top {
-  background: linear-gradient(to bottom, rgba(17, 24, 39, 0.9) 0%, transparent 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(17, 24, 39, 0.9) 0%,
+    transparent 100%
+  );
 }
 
 .gradient-overlay-bottom {
-  background: linear-gradient(to top, rgba(17, 24, 39, 0.9) 0%, transparent 100%);
+  background: linear-gradient(
+    to top,
+    rgba(17, 24, 39, 0.9) 0%,
+    transparent 100%
+  );
 }
