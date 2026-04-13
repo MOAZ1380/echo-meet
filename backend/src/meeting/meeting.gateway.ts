@@ -87,39 +87,39 @@ export class ChatGateway implements OnModuleInit {
     });
   }
 
-  @SubscribeMessage('offer')
-  handleOffer(
-    @MessageBody()
-    data: { roomId: string; offer: any; to: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    this.server.to(data.to).emit('offer', {
-      offer: data.offer,
-      from: client.id,
-    });
-  }
+  // @SubscribeMessage('offer')
+  // handleOffer(
+  //   @MessageBody()
+  //   data: { roomId: string; offer: any; to: string },
+  //   @ConnectedSocket() client: Socket,
+  // ) {
+  //   this.server.to(data.to).emit('offer', {
+  //     offer: data.offer,
+  //     from: client.id,
+  //   });
+  // }
 
-  @SubscribeMessage('answer')
-  handleAnswer(
-    @MessageBody()
-    data: { answer: any; to: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    this.server.to(data.to).emit('answer', {
-      answer: data.answer,
-      from: client.id,
-    });
-  }
+  // @SubscribeMessage('answer')
+  // handleAnswer(
+  //   @MessageBody()
+  //   data: { answer: any; to: string },
+  //   @ConnectedSocket() client: Socket,
+  // ) {
+  //   this.server.to(data.to).emit('answer', {
+  //     answer: data.answer,
+  //     from: client.id,
+  //   });
+  // }
 
-  @SubscribeMessage('ice-candidate')
-  handleIceCandidate(
-    @MessageBody()
-    data: { candidate: any; to: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    this.server.to(data.to).emit('ice-candidate', {
-      candidate: data.candidate,
-      from: client.id,
-    });
-  }
+  // @SubscribeMessage('ice-candidate')
+  // handleIceCandidate(
+  //   @MessageBody()
+  //   data: { candidate: any; to: string },
+  //   @ConnectedSocket() client: Socket,
+  // ) {
+  //   this.server.to(data.to).emit('ice-candidate', {
+  //     candidate: data.candidate,
+  //     from: client.id,
+  //   });
+  // }
 }
