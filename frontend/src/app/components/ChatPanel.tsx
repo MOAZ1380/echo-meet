@@ -110,7 +110,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       {/* Input */}
       <form
         onSubmit={handleSubmit}
-        className="p-4 border-t border-gray-700 mb-20 lg:mb-0"
+        className="p-4 border-t border-gray-700 mb-20 md:mb-0"
       >
         <div className="flex gap-2">
           <input

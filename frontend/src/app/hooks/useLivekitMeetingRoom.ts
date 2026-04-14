@@ -35,6 +35,7 @@ export function useMeetingRoom(displayName: string) {
   const [remoteParticipants, setRemoteParticipants] = useState<
     RemoteParticipantWithStream[]
   >([]);
+
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [joinedRoomId, setJoinedRoomId] = useState("");
   const [socketStatus, setSocketStatus] = useState<
@@ -169,7 +170,29 @@ export function useMeetingRoom(displayName: string) {
           setRemoteParticipants([]);
           setLocalStream(null);
         })
-        .on(RoomEvent.ParticipantConnected, syncParticipantState)
+        .on(RoomEvent.ParticipantConnected, (participant) => {
+          syncParticipantState();
+
+          const message = `${participant.identity} joined the room`;
+
+          const room = roomRef.current;
+          if (!room) return;
+
+          if (participant.identity !== localUserIdRef.current) return;
+
+          console.log(`${participant.identity} joined the room`);
+
+          room.localParticipant.publishData(
+            textEncoder.encode(
+              JSON.stringify({
+                type: "system",
+                message,
+                text: `${participant.identity} joined the room`,
+              }),
+            ),
+            { reliable: true },
+          );
+        })
         .on(RoomEvent.ParticipantDisconnected, syncParticipantState)
         .on(RoomEvent.TrackSubscribed, syncParticipantState)
         .on(RoomEvent.TrackUnsubscribed, syncParticipantState)
@@ -179,35 +202,33 @@ export function useMeetingRoom(displayName: string) {
         .on(RoomEvent.LocalTrackPublished, syncParticipantState)
         .on(RoomEvent.LocalTrackUnpublished, syncParticipantState)
         .on(RoomEvent.DataReceived, (payload, participant) => {
-          if (!participant || participant.identity === localUserIdRef.current) {
-            return;
-          }
-
           try {
             const parsed = JSON.parse(
               textDecoder.decode(payload),
             ) as ChatPayload;
-            const messageText = parsed.text;
-            if (parsed.type !== "chat" || typeof messageText !== "string") {
-              return;
-            }
 
-            const trimmedText = messageText.trim();
-            if (!trimmedText) return;
+            if (!parsed.text) return;
+
+            const messageType = parsed.type || "chat";
 
             setChatMessages((prev) => [
               ...prev,
               {
-                id: `${participant.identity}-${Date.now()}-${Math.random()}`,
-                senderId: participant.identity,
-                senderName: parsed.sender || participant.identity,
-                message: trimmedText,
+                id: `${participant?.identity || "system"}-${Date.now()}`,
+                senderId:
+                  messageType === "system"
+                    ? "system"
+                    : participant?.identity || "unknown",
+                senderName:
+                  messageType === "system"
+                    ? "System"
+                    : parsed.sender || participant?.identity || "unknown",
+                message: parsed.text || "",
                 timestamp: new Date(),
+                type: messageType,
               },
             ]);
-          } catch {
-            // Ignore non-chat messages.
-          }
+          } catch {}
         });
     },
     [syncParticipantState],

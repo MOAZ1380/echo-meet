@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import {
   Mic,
   MicOff,
@@ -52,6 +52,13 @@ export const MeetingRoom: React.FC = () => {
   const [activeSidebar, setActiveSidebar] = useState<SidebarType>(null);
   const [meetingDuration, setMeetingDuration] = useState("00:00");
   const [showControls, setShowControls] = useState(true);
+  const [joinPopupText, setJoinPopupText] = useState("");
+  const [showJoinPopup, setShowJoinPopup] = useState(false);
+  const previousRemoteIdsRef = useRef<string[]>([]);
+  const hasParticipantSnapshotRef = useRef(false);
+  const joinPopupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   // Meeting-room behavior comes from the LiveKit hook.
   const {
@@ -149,6 +156,50 @@ export const MeetingRoom: React.FC = () => {
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       clearTimeout(timeout);
+    };
+  }, []);
+
+  // Show a short popup when one or more new remote participants join.
+  useEffect(() => {
+    const remoteIds = remoteParticipants.map((participant) => participant.id);
+
+    if (!hasParticipantSnapshotRef.current) {
+      previousRemoteIdsRef.current = remoteIds;
+      hasParticipantSnapshotRef.current = true;
+      return;
+    }
+
+    const previousIds = new Set(previousRemoteIdsRef.current);
+    const joinedParticipants = remoteParticipants.filter(
+      (participant) => !previousIds.has(participant.id),
+    );
+
+    previousRemoteIdsRef.current = remoteIds;
+
+    if (joinedParticipants.length === 0) return;
+
+    const text =
+      joinedParticipants.length === 1
+        ? `${joinedParticipants[0].name} joined the room`
+        : `${joinedParticipants.length} people joined the room`;
+
+    setJoinPopupText(text);
+    setShowJoinPopup(true);
+
+    if (joinPopupTimeoutRef.current) {
+      clearTimeout(joinPopupTimeoutRef.current);
+    }
+
+    joinPopupTimeoutRef.current = setTimeout(() => {
+      setShowJoinPopup(false);
+    }, 2500);
+  }, [remoteParticipants]);
+
+  useEffect(() => {
+    return () => {
+      if (joinPopupTimeoutRef.current) {
+        clearTimeout(joinPopupTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -346,6 +397,20 @@ export const MeetingRoom: React.FC = () => {
           <p className="text-sm font-medium">Connecting to meeting...</p>
         </div>
       )}
+
+      <AnimatePresence>
+        {showJoinPopup && (
+          <motion.div
+            initial={{ opacity: 0, y: -16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.96 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-20 right-4 z-50 bg-emerald-600/95 text-white px-4 py-2 rounded-lg shadow-lg backdrop-blur-sm"
+          >
+            <p className="text-sm font-medium">{joinPopupText}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

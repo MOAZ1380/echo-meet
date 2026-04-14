@@ -12,4 +12,5 @@ export interface ChatMessage {
   senderName: string;
   message: string;
   timestamp: Date;
+  type?: "chat" | "system";
 }
