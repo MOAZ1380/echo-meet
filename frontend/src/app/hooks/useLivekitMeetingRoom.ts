@@ -22,12 +22,14 @@ type EnvImportMeta = ImportMeta & {
   };
 };
 
+// Convert a LiveKit track wrapper into a plain MediaStreamTrack when possible.
 function trackToMediaStreamTrack(
   track: { mediaStreamTrack?: MediaStreamTrack } | undefined,
 ) {
   return track?.mediaStreamTrack;
 }
 
+// LiveKit meeting controller hook used by the meeting screen.
 export function useMeetingRoom(displayName: string) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteParticipants, setRemoteParticipants] = useState<
@@ -49,6 +51,7 @@ export function useMeetingRoom(displayName: string) {
   const camEnabledRef = useRef(false);
   const isScreenSharingRef = useRef(false);
 
+  // Build a preview stream from the current local publications.
   const buildLocalPreviewStream = useCallback((room: Room) => {
     const stream = new MediaStream();
 
@@ -84,6 +87,7 @@ export function useMeetingRoom(displayName: string) {
     return stream.getTracks().length > 0 ? stream : null;
   }, []);
 
+  // Convert LiveKit remote participants into the shape used by the UI.
   const buildRemoteParticipants = useCallback((room: Room) => {
     const peers: RemoteParticipantWithStream[] = [];
 
@@ -129,6 +133,7 @@ export function useMeetingRoom(displayName: string) {
     return peers;
   }, []);
 
+  // Sync React state with the current room snapshot.
   const syncParticipantState = useCallback(() => {
     const room = roomRef.current;
     if (!room) return;
@@ -137,6 +142,7 @@ export function useMeetingRoom(displayName: string) {
     setLocalStream(buildLocalPreviewStream(room));
   }, [buildLocalPreviewStream, buildRemoteParticipants]);
 
+  // Re-apply mic, camera, and screen-share state after connecting.
   const applyDeviceState = useCallback(async () => {
     const room = roomRef.current;
     if (!room) return;
@@ -150,6 +156,7 @@ export function useMeetingRoom(displayName: string) {
     syncParticipantState();
   }, [syncParticipantState]);
 
+  // Register LiveKit room events that keep the UI synchronized.
   const registerRoomListeners = useCallback(
     (room: Room) => {
       room
@@ -206,11 +213,12 @@ export function useMeetingRoom(displayName: string) {
     [syncParticipantState],
   );
 
+  // Keep the API stable for the page; media is initialized when the room connects.
   const ensureLocalMedia = useCallback(async () => {
-    // Keep this hook API stable for the page flow. Actual device setup happens on room connect.
     return;
   }, []);
 
+  // Connect to a LiveKit room and hydrate the participant state.
   const joinMeeting = useCallback(
     async (roomId: string) => {
       const livekitUrl = (import.meta as EnvImportMeta).env.VITE_LIVEKIT_URL;
@@ -243,6 +251,7 @@ export function useMeetingRoom(displayName: string) {
     [applyDeviceState, displayName, registerRoomListeners],
   );
 
+  // Publish a chat payload over LiveKit data messages and mirror it locally.
   const sendChatMessage = useCallback(
     (text: string) => {
       const value = text.trim();
@@ -278,6 +287,7 @@ export function useMeetingRoom(displayName: string) {
     [displayName],
   );
 
+  // Toggle the local microphone track.
   const toggleMic = useCallback(() => {
     const nextEnabled = !micEnabledRef.current;
     micEnabledRef.current = nextEnabled;
@@ -291,6 +301,7 @@ export function useMeetingRoom(displayName: string) {
       .then(syncParticipantState);
   }, [syncParticipantState]);
 
+  // Toggle the local camera track.
   const toggleCamera = useCallback(() => {
     const nextEnabled = !camEnabledRef.current;
     camEnabledRef.current = nextEnabled;
@@ -304,6 +315,7 @@ export function useMeetingRoom(displayName: string) {
       .then(syncParticipantState);
   }, [syncParticipantState]);
 
+  // Start or stop screen sharing and recover cleanly on failure.
   const toggleScreenShare = useCallback(async () => {
     const nextEnabled = !isScreenSharingRef.current;
     isScreenSharingRef.current = nextEnabled;
@@ -321,6 +333,7 @@ export function useMeetingRoom(displayName: string) {
     }
   }, [syncParticipantState]);
 
+  // Disconnect from LiveKit and clear all in-memory meeting state.
   const leaveMeeting = useCallback(() => {
     const room = roomRef.current;
 

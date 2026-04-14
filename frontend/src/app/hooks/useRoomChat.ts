@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { socket } from "../services/socketService";
 import type { ChatMessage } from "../types/chat";
 
+// Legacy socket-based room chat hook.
 export function useRoomChat() {
   const [socketStatus, setSocketStatus] = useState<
     "connected" | "disconnected"
@@ -9,6 +10,7 @@ export function useRoomChat() {
   const [joinedRoomId, setJoinedRoomId] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
+  // Wire socket lifecycle and message events into React state.
   useEffect(() => {
     function onConnect() {
       setSocketStatus("connected");
@@ -40,10 +42,12 @@ export function useRoomChat() {
     };
   }, []);
 
+  // Join the legacy socket room channel.
   function joinRoom(roomId: string) {
     socket.emit("joinRoom", { roomId });
   }
 
+  // Send a text message through the socket room channel.
   function sendMessage(message: string) {
     if (!joinedRoomId || !message.trim()) return;
 

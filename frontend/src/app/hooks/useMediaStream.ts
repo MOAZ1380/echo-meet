@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 
 /**
  * Custom hook to manage media streams (video and audio)
@@ -12,51 +12,71 @@ export const useMediaStream = () => {
   const [error, setError] = useState<string | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
 
-  // Initialize media stream
+  // Request camera and microphone access from the browser.
   const initializeStream = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: 'user'
+          facingMode: "user",
         },
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        }
+          autoGainControl: true,
+        },
       });
       setStream(mediaStream);
       setError(null);
     } catch (err: any) {
       // Don't log permission errors to console - they're expected
-      if (err.name !== 'NotAllowedError' && err.name !== 'PermissionDeniedError') {
-        console.error('Error accessing media devices:', err);
+      if (
+        err.name !== "NotAllowedError" &&
+        err.name !== "PermissionDeniedError"
+      ) {
+        console.error("Error accessing media devices:", err);
       }
-      
+
       // Provide specific error messages based on error type
-      let errorMessage = 'Could not access camera/microphone.';
-      
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        errorMessage = 'Camera/microphone access denied. Please allow permissions in your browser settings and refresh the page.';
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        errorMessage = 'No camera or microphone found. Please connect a device and try again.';
-      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-        errorMessage = 'Camera or microphone is already in use by another application.';
-      } else if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
-        errorMessage = 'Camera/microphone does not meet the required settings.';
-      } else if (err.name === 'TypeError') {
-        errorMessage = 'Invalid camera/microphone constraints. Please check your browser settings.';
-      } else if (err.name === 'SecurityError') {
-        errorMessage = 'Access to camera/microphone blocked by security settings. This app requires HTTPS.';
+      let errorMessage = "Could not access camera/microphone.";
+
+      if (
+        err.name === "NotAllowedError" ||
+        err.name === "PermissionDeniedError"
+      ) {
+        errorMessage =
+          "Camera/microphone access denied. Please allow permissions in your browser settings and refresh the page.";
+      } else if (
+        err.name === "NotFoundError" ||
+        err.name === "DevicesNotFoundError"
+      ) {
+        errorMessage =
+          "No camera or microphone found. Please connect a device and try again.";
+      } else if (
+        err.name === "NotReadableError" ||
+        err.name === "TrackStartError"
+      ) {
+        errorMessage =
+          "Camera or microphone is already in use by another application.";
+      } else if (
+        err.name === "OverconstrainedError" ||
+        err.name === "ConstraintNotSatisfiedError"
+      ) {
+        errorMessage = "Camera/microphone does not meet the required settings.";
+      } else if (err.name === "TypeError") {
+        errorMessage =
+          "Invalid camera/microphone constraints. Please check your browser settings.";
+      } else if (err.name === "SecurityError") {
+        errorMessage =
+          "Access to camera/microphone blocked by security settings. This app requires HTTPS.";
       }
-      
+
       setError(errorMessage);
     }
   };
 
-  // Toggle camera on/off
+  // Enable or disable the first available video track.
   const toggleCamera = () => {
     if (stream) {
       const videoTrack = stream.getVideoTracks()[0];
@@ -67,7 +87,7 @@ export const useMediaStream = () => {
     }
   };
 
-  // Toggle microphone on/off
+  // Enable or disable the first available audio track.
   const toggleMic = () => {
     if (stream) {
       const audioTrack = stream.getAudioTracks()[0];
@@ -78,14 +98,14 @@ export const useMediaStream = () => {
     }
   };
 
-  // Start screen sharing
+  // Ask the browser for a display-capture stream and track its lifecycle.
   const startScreenShare = async () => {
     try {
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: { cursor: 'always' },
-        audio: false
+        video: { cursor: "always" },
+        audio: false,
       });
-      
+
       screenStreamRef.current = screenStream;
       setIsScreenSharing(true);
 
@@ -95,38 +115,44 @@ export const useMediaStream = () => {
       };
     } catch (err: any) {
       // Don't log permission errors to console - they're expected when user cancels
-      if (err.name !== 'NotAllowedError' && err.name !== 'PermissionDeniedError') {
-        console.error('Error sharing screen:', err);
+      if (
+        err.name !== "NotAllowedError" &&
+        err.name !== "PermissionDeniedError"
+      ) {
+        console.error("Error sharing screen:", err);
       }
       // Only set error for non-permission issues
-      if (err.name !== 'NotAllowedError' && err.name !== 'PermissionDeniedError') {
-        setError('Could not share screen. Please try again.');
+      if (
+        err.name !== "NotAllowedError" &&
+        err.name !== "PermissionDeniedError"
+      ) {
+        setError("Could not share screen. Please try again.");
       }
     }
   };
 
-  // Stop screen sharing
+  // Stop the active screen-share stream if one exists.
   const stopScreenShare = () => {
     if (screenStreamRef.current) {
-      screenStreamRef.current.getTracks().forEach(track => track.stop());
+      screenStreamRef.current.getTracks().forEach((track) => track.stop());
       screenStreamRef.current = null;
       setIsScreenSharing(false);
     }
   };
 
-  // Stop all streams
+  // Stop every live media track owned by this hook.
   const stopStream = () => {
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       setStream(null);
     }
     if (screenStreamRef.current) {
-      screenStreamRef.current.getTracks().forEach(track => track.stop());
+      screenStreamRef.current.getTracks().forEach((track) => track.stop());
       screenStreamRef.current = null;
     }
   };
 
-  // Cleanup on unmount
+  // Cleanup on unmount so camera and microphone tracks do not stay open.
   useEffect(() => {
     return () => {
       stopStream();
@@ -144,6 +170,6 @@ export const useMediaStream = () => {
     toggleMic,
     startScreenShare,
     stopScreenShare,
-    stopStream
+    stopStream,
   };
 };

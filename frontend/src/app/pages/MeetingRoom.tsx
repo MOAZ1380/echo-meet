@@ -28,6 +28,7 @@ import { useMeetingRoom } from "../hooks/useLivekitMeetingRoom";
 
 type SidebarType = "chat" | "participants" | null;
 
+// Data passed from the lobby through navigation state.
 type MeetingLocationState = {
   userName?: string;
   mediaPreferences?: {
@@ -36,6 +37,7 @@ type MeetingLocationState = {
   };
 };
 
+// Main meeting screen: connects LiveKit state, controls, and side panels.
 export const MeetingRoom: React.FC = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
@@ -51,6 +53,7 @@ export const MeetingRoom: React.FC = () => {
   const [meetingDuration, setMeetingDuration] = useState("00:00");
   const [showControls, setShowControls] = useState(true);
 
+  // Meeting-room behavior comes from the LiveKit hook.
   const {
     localStream,
     remoteParticipants,
@@ -68,7 +71,7 @@ export const MeetingRoom: React.FC = () => {
     toggleScreenShare,
   } = useMeetingRoom(userName);
 
-  // Ensure media is prepared and respects lobby preferences.
+  // Prepare the local media state once, then apply the lobby's mic/camera choices.
   useEffect(() => {
     let isCancelled = false;
 
@@ -102,7 +105,7 @@ export const MeetingRoom: React.FC = () => {
     toggleMic,
   ]);
 
-  // Join meeting room once when room id is available.
+  // Join the LiveKit room once per mount.
   useEffect(() => {
     if (!meetingId || hasJoinedRoomRef.current) return;
 
@@ -110,13 +113,14 @@ export const MeetingRoom: React.FC = () => {
     void joinMeeting(meetingId);
   }, [joinMeeting, meetingId]);
 
+  // Redirect back home if the route does not include a meeting id.
   useEffect(() => {
     if (!meetingId) {
       navigate("/");
     }
   }, [meetingId, navigate]);
 
-  // Meeting duration timer
+  // Drive the on-screen meeting timer.
   useEffect(() => {
     const startTime = Date.now();
     const interval = setInterval(() => {
@@ -131,7 +135,7 @@ export const MeetingRoom: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-hide controls after inactivity
+  // Keep controls visible while the pointer moves, then fade them out after a delay.
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
 
@@ -148,19 +152,23 @@ export const MeetingRoom: React.FC = () => {
     };
   }, []);
 
+  // Toggle the active sidebar without leaving the meeting view.
   const handleToggleSidebar = (sidebar: SidebarType) => {
     setActiveSidebar(activeSidebar === sidebar ? null : sidebar);
   };
 
+  // Disconnect from the room before navigating away.
   const handleLeaveMeeting = () => {
     leaveMeeting();
     navigate("/");
   };
 
+  // Screen share is handled by the LiveKit hook.
   const handleScreenShare = () => {
     void toggleScreenShare();
   };
 
+  // Merge the local participant and remote peers into a single grid model.
   const participants = useMemo<Participant[]>(() => {
     const localParticipant: Participant = {
       id: "local-user",
@@ -181,7 +189,7 @@ export const MeetingRoom: React.FC = () => {
     return [localParticipant, ...remote];
   }, [camEnabled, micEnabled, remoteParticipants, userName]);
 
-  // Calculate grid layout based on participant count
+  // Pick a grid layout that roughly matches the current participant count.
   const getGridClass = () => {
     const count = participants.length;
     if (count === 1) return "grid-cols-1";

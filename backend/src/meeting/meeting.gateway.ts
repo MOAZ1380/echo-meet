@@ -54,6 +54,8 @@ export class MeetingGateway implements OnModuleInit {
       return client.emit('error', { message: 'Room not found' });
     }
 
+    await client.join(room.id);
+
     client.emit('joinedRoom', { roomId: room.id });
 
     this.server.to(room.id).emit('userJoined', {
