@@ -20,6 +20,11 @@ export const Home: React.FC = () => {
   };
 
   const handleCreateMeeting = () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
     const meetingCode = generateMeetingCode();
     navigate(`/lobby/${meetingCode}`);
   };
