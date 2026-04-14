@@ -14,8 +14,9 @@ export const Lobby: React.FC = () => {
   const { user } = useAuth();
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
-  const [userName, setUserName] = useState("");
+  const [userName, setUserName] = useState(user?.name ?? "");
   const [hasRequestedMedia, setHasRequestedMedia] = useState(false);
+  const isNameLocked = Boolean(user?.name?.trim());
   const {
     stream,
     isCameraOn,
@@ -42,27 +43,30 @@ export const Lobby: React.FC = () => {
 
   // Attach stream to video preview
   useEffect(() => {
-    if (videoRef.current && stream && isCameraOn) {
-      videoRef.current.srcObject = stream;
-      videoRef.current.play().catch(() => {});
+    if (!videoRef.current) return;
+
+    videoRef.current.srcObject = stream || null;
+
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+  }, [stream]);
+
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isNameLocked) {
+      return;
     }
-  }, [stream, isCameraOn]);
 
-  // get name from data in db
+    setUserName(event.target.value);
+  };
 
-  useEffect(() => {
-    if (user?.name) {
-      setUserName(user.name);
-    }
-  }, [user]);
-
-  // ✅ Safe toggle mic
   const handleToggleMic = async () => {
     if (!stream) await initializeStream();
     toggleMic();
   };
 
-  // ✅ Safe toggle camera
   const handleToggleCamera = async () => {
     if (!stream) await initializeStream();
     toggleCamera();
@@ -239,9 +243,21 @@ export const Lobby: React.FC = () => {
                       id="userName"
                       type="text"
                       value={userName}
-                      readOnly
-                      className="w-full bg-gray-700 text-white px-4 py-3 rounded-xl opacity-70 cursor-not-allowed"
+                      onChange={handleNameChange}
+                      readOnly={isNameLocked}
+                      placeholder={isNameLocked ? undefined : "Enter your name"}
+                      className={`w-full bg-gray-700 text-white px-4 py-3 rounded-xl ${
+                        isNameLocked
+                          ? "opacity-70 cursor-not-allowed"
+                          : "border border-gray-600 focus:outline-none focus:ring-2 focus:ring-[var(--echo-primary)]"
+                      }`}
                     />
+                    {!isNameLocked && (
+                      <p className="mt-2 text-xs text-gray-400">
+                        You can join with any name if you are not signed in or
+                        your profile has no saved name.
+                      </p>
+                    )}
                   </div>
 
                   <div className="bg-gray-700/50 p-4 rounded-xl space-y-3">
@@ -284,7 +300,7 @@ export const Lobby: React.FC = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleJoinMeeting}
-                    disabled={!userName && !user?.name}
+                    disabled={!userName.trim() && !user?.name?.trim()}
                     className="w-full bg-[var(--echo-primary)] hover:bg-[var(--echo-primary-hover)] text-white py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30"
                   >
                     Join Meeting
