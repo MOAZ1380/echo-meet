@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { motion } from "motion/react";
-import {
-  Video,
-  VideoOff,
-  Mic,
-  MicOff,
-  Settings,
-  ArrowRight,
-} from "lucide-react";
+import { Video, VideoOff, Mic, MicOff, ArrowRight } from "lucide-react";
 import { useMediaStream } from "../hooks/useMediaStream";
+import { useAuth } from "../hooks/useAuth";
 
 /**
  * Lobby Page Component
@@ -17,6 +11,7 @@ import { useMediaStream } from "../hooks/useMediaStream";
  */
 
 export const Lobby: React.FC = () => {
+  const { user } = useAuth();
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
   const [userName, setUserName] = useState("");
@@ -37,7 +32,7 @@ export const Lobby: React.FC = () => {
   // Don't auto-request permissions - let user decide
   useEffect(() => {
     return () => stopStream();
-  }, []);
+  }, [stopStream]);
 
   // Request media access manually
   const handleRequestMedia = async () => {
@@ -49,21 +44,43 @@ export const Lobby: React.FC = () => {
   useEffect(() => {
     if (videoRef.current && stream && isCameraOn) {
       videoRef.current.srcObject = stream;
+      videoRef.current.play().catch(() => {});
     }
   }, [stream, isCameraOn]);
 
-  const handleJoinMeeting = () => {
-    if (userName.trim()) {
-      navigate(`/meeting/${meetingId}`, {
-        state: {
-          userName: userName.trim(),
-          mediaPreferences: {
-            micOn: isMicOn,
-            cameraOn: isCameraOn,
-          },
-        },
-      });
+  // get name from data in db
+
+  useEffect(() => {
+    if (user?.name) {
+      setUserName(user.name);
     }
+  }, [user]);
+
+  // ✅ Safe toggle mic
+  const handleToggleMic = async () => {
+    if (!stream) await initializeStream();
+    toggleMic();
+  };
+
+  // ✅ Safe toggle camera
+  const handleToggleCamera = async () => {
+    if (!stream) await initializeStream();
+    toggleCamera();
+  };
+
+  const handleJoinMeeting = () => {
+    const finalName = userName.trim() || user?.name || "Anonymous";
+
+    if (!meetingId) return;
+    navigate(`/meeting/${meetingId}`, {
+      state: {
+        userName: finalName,
+        mediaPreferences: {
+          micOn: isMicOn,
+          cameraOn: isCameraOn,
+        },
+      },
+    });
   };
 
   return (
@@ -122,7 +139,7 @@ export const Lobby: React.FC = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={toggleMic}
+                      onClick={handleToggleMic}
                       className={`p-4 rounded-full transition-colors ${
                         isMicOn
                           ? "bg-gray-700 hover:bg-gray-600 text-white"
@@ -142,7 +159,7 @@ export const Lobby: React.FC = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={toggleCamera}
+                      onClick={handleToggleCamera}
                       className={`p-4 rounded-full transition-colors ${
                         isCameraOn
                           ? "bg-gray-700 hover:bg-gray-600 text-white"
@@ -222,9 +239,8 @@ export const Lobby: React.FC = () => {
                       id="userName"
                       type="text"
                       value={userName}
-                      onChange={(e) => setUserName(e.target.value)}
-                      placeholder="Enter your name"
-                      className="w-full bg-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--echo-primary)] placeholder-gray-400"
+                      readOnly
+                      className="w-full bg-gray-700 text-white px-4 py-3 rounded-xl opacity-70 cursor-not-allowed"
                     />
                   </div>
 
@@ -268,7 +284,7 @@ export const Lobby: React.FC = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleJoinMeeting}
-                    disabled={!userName.trim()}
+                    disabled={!userName && !user?.name}
                     className="w-full bg-[var(--echo-primary)] hover:bg-[var(--echo-primary-hover)] text-white py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30"
                   >
                     Join Meeting
