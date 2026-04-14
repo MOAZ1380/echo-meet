@@ -108,14 +108,17 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700">
+      <form
+        onSubmit={handleSubmit}
+        className="p-4 border-t border-gray-700 mb-20 lg:mb-0"
+      >
         <div className="flex gap-2">
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--echo-primary)] placeholder-gray-400"
+            className="flex-1 bg-gray-700 text-white px-4 py-2 rounded-lg z-50 focus:outline-none focus:ring-2 focus:ring-[var(--echo-primary)] placeholder-gray-400"
           />
           <motion.button
             whileHover={{ scale: 1.05 }}
