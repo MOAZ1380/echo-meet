@@ -10,13 +10,28 @@ import { RoomStatus } from '@prisma/client';
 import { LivekitService } from '../livekit/livekit.service';
 
 @Injectable()
+/**
+ * Business logic for room lifecycle, membership moderation, and token issuance.
+ */
 export class RoomService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly livekitService: LivekitService,
   ) {}
 
-  // 🏠 CREATE ROOM
+  /**
+   * Create a new room for the provided owner.
+   *
+   * Rules:
+   * - The owner user must exist.
+   * - `startTime` defaults to now if not provided.
+   * - `status` defaults to `RoomStatus.active`.
+   *
+   * @param data Room creation payload.
+   * @param userId Authenticated owner id.
+   * @throws NotFoundException If user does not exist.
+   * @returns Newly created room.
+   */
   async createRoom(data: CreateRoomDto, userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -37,7 +52,12 @@ export class RoomService {
     return room;
   }
 
-  // 📄 GET ALL ROOMS
+  /**
+   * Fetch all rooms.
+   *
+   * Includes room owner and participant relations.
+   * @returns Array of rooms.
+   */
   async findAll() {
     return this.prisma.room.findMany({
       include: {
@@ -47,7 +67,14 @@ export class RoomService {
     });
   }
 
-  // 🔍 GET ROOM
+  /**
+   * Fetch a room by id.
+   *
+   * Includes room owner and participant relations.
+   * @param id Room id.
+   * @throws NotFoundException If room does not exist.
+   * @returns Room record.
+   */
   async findOne(id: string) {
     const room = await this.prisma.room.findUnique({
       where: { id },
@@ -64,7 +91,21 @@ export class RoomService {
     return room;
   }
 
-  // ✏️ UPDATE (OWNER ONLY)
+  /**
+   * Update room data (owner only).
+   *
+   * Rules:
+   * - Request body must not be empty.
+   * - Room must belong to authenticated owner.
+   * - Only provided fields are updated.
+   *
+   * @param id Room id.
+   * @param data Partial update payload.
+   * @param userId Authenticated owner id.
+   * @throws BadRequestException If body is empty.
+   * @throws NotFoundException If room not found for owner.
+   * @returns Updated room.
+   */
   async update(id: string, data: UpdateRoomDto, userId: string) {
     if (Object.keys(data).length === 0) {
       throw new BadRequestException('Request body cannot be empty');
@@ -87,7 +128,14 @@ export class RoomService {
     });
   }
 
-  // ❌ DELETE (OWNER ONLY)
+  /**
+   * Delete a room (owner only).
+   *
+   * @param id Room id.
+   * @param userId Authenticated owner id.
+   * @throws NotFoundException If room not found for owner.
+   * @returns Deleted room.
+   */
   async remove(id: string, userId: string) {
     const room = await this.prisma.room.findFirst({
       where: { id, ownerId: userId },
@@ -102,7 +150,18 @@ export class RoomService {
     });
   }
 
-  // 🚪 JOIN REQUEST (PENDING)
+  /**
+   * Create a join request for a room.
+   *
+   * Rules:
+   * - A user can only have one participant record per room.
+   * - New request is created with `pending` status.
+   *
+   * @param roomId Target room id.
+   * @param userId Requesting user id.
+   * @throws BadRequestException If request already exists.
+   * @returns Created participant record.
+   */
   async requestJoin(roomId: string, userId: string) {
     const existing = await this.prisma.roomParticipant.findFirst({
       where: { roomId, userId },
@@ -121,7 +180,14 @@ export class RoomService {
     });
   }
 
-  // 👀 GET PENDING USERS (OWNER ONLY)
+  /**
+   * Get all pending join requests for a room (owner only).
+   *
+   * @param roomId Target room id.
+   * @param ownerId Authenticated owner id.
+   * @throws BadRequestException If requester is not the room owner.
+   * @returns Pending participants including user data.
+   */
   async getPendingUsers(roomId: string, ownerId: string) {
     const room = await this.prisma.room.findUnique({
       where: { id: roomId },
@@ -142,7 +208,15 @@ export class RoomService {
     });
   }
 
-  // ✅ APPROVE USER
+  /**
+   * Approve a pending user for a room (owner only).
+   *
+   * @param roomId Target room id.
+   * @param targetUserId User id to approve.
+   * @param ownerId Authenticated owner id.
+   * @throws BadRequestException If requester is not the room owner.
+   * @returns Updated participant record with `approved` status.
+   */
   async approveUser(roomId: string, targetUserId: string, ownerId: string) {
     const room = await this.prisma.room.findUnique({
       where: { id: roomId },
@@ -165,7 +239,15 @@ export class RoomService {
     });
   }
 
-  // ❌ REJECT USER
+  /**
+   * Reject a pending user for a room (owner only).
+   *
+   * @param roomId Target room id.
+   * @param targetUserId User id to reject.
+   * @param ownerId Authenticated owner id.
+   * @throws BadRequestException If requester is not the room owner.
+   * @returns Updated participant record with `rejected` status.
+   */
   async rejectUser(roomId: string, targetUserId: string, ownerId: string) {
     const room = await this.prisma.room.findUnique({
       where: { id: roomId },
@@ -188,7 +270,17 @@ export class RoomService {
     });
   }
 
-  // 🎟️ GET LIVEKIT TOKEN (ONLY IF APPROVED)
+  /**
+   * Generate a LiveKit token for a room participant.
+   *
+   * Rules:
+   * - User must already be approved in room participants.
+   *
+   * @param roomId Target room id.
+   * @param userId Authenticated user id.
+   * @throws BadRequestException If user is not approved yet.
+   * @returns LiveKit token payload.
+   */
   async generateToken(roomId: string, userId: string) {
     const participant = await this.prisma.roomParticipant.findFirst({
       where: {
