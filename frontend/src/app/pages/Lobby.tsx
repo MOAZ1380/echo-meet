@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { Video, VideoOff, Mic, MicOff, ArrowRight } from "lucide-react";
 import { useMediaStream } from "../hooks/useMediaStream";
 import { useAuth } from "../hooks/useAuth";
+import { requestGuestJoinRoom, requestJoinRoom } from "../api/roomApi";
 
 /**
  * Lobby Page Component
@@ -11,7 +12,7 @@ import { useAuth } from "../hooks/useAuth";
  */
 
 export const Lobby: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated, token } = useAuth();
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
   const [userName, setUserName] = useState(user?.name ?? "");
@@ -74,6 +75,8 @@ export const Lobby: React.FC = () => {
 
   const handleJoinMeeting = () => {
     const finalName = userName.trim() || user?.name || "Anonymous";
+
+    // send event for the owner to join the room
 
     if (!meetingId) return;
     navigate(`/meeting/${meetingId}`, {

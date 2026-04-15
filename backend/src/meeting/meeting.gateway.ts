@@ -62,8 +62,39 @@ export class MeetingGateway implements OnModuleInit {
    * @param data Room id and requester user id.
    * @returns Success flag.
    */
-  @SubscribeMessage('requestJoin')
-  async requestJoin(@MessageBody() data: { roomId: string; userId: string }) {
+  @SubscribeMessage('requestJoinAuth')
+  async requesrequestJoinAuthtJoin(
+    @MessageBody() data: { roomId: string; userId: string },
+  ) {
+    const participant = await this.roomService.requestJoin(
+      data.roomId,
+      data.userId,
+    );
+
+    const room = await this.roomService.findOne(data.roomId);
+
+    this.server.to(room.ownerId).emit('room:join-request', {
+      roomId: data.roomId,
+      userId: data.userId,
+      participant,
+    });
+
+    return { success: true };
+  }
+
+  /**
+   * Event: requestJoin
+   *
+   * Creates a pending join request, then notifies room owner in realtime.
+   * Emits room:join-request to the owner private room.
+   *
+   * @param data Room id and requester user id.
+   * @returns Success flag.
+   */
+  @SubscribeMessage('requestJoinGuest')
+  async requestJoinGuest(
+    @MessageBody() data: { roomId: string; userId: string },
+  ) {
     const participant = await this.roomService.requestJoin(
       data.roomId,
       data.userId,

@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router";
 import { motion } from "motion/react";
 import { Video, Plus, LogIn, ArrowRight, User } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { createRoom, requestJoinRoom } from "../api/roomApi";
+import { createRoom } from "../api/roomApi";
 
 /**
  * Home Page Component
@@ -14,11 +14,6 @@ export const Home: React.FC = () => {
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState("");
   const { isAuthenticated, logout, token } = useAuth();
-
-  // Generate random meeting code
-  const generateMeetingCode = () => {
-    return Math.random().toString(36).substring(2, 12).toUpperCase();
-  };
 
   const handleCreateMeeting = async () => {
     if (!isAuthenticated) {
@@ -31,19 +26,10 @@ export const Home: React.FC = () => {
   };
 
   const handleJoinMeeting = (e: React.FormEvent) => {
-    const requestJoin = async () => {
-      try {
-        await requestJoinRoom(token, joinCode.trim(), "Guest");
-        navigate(`/lobby/${joinCode.trim()}`);
-      } catch (error) {
-        console.error("Failed to join room:", error);
-        alert("Failed to join room. Please check the code and try again.");
-      }
-    };
     e.preventDefault();
-    // if (joinCode.trim()) {
-    //   navigate(`/lobby/${joinCode.trim()}`);
-    // }
+    if (joinCode.trim()) {
+      navigate(`/lobby/${joinCode.trim()}`);
+    }
   };
 
   return (

@@ -83,6 +83,17 @@ export function requestJoinRoom(token: string, roomId: string, name: string) {
   });
 }
 
+export function requestGuestJoinRoom(
+  roomId: string,
+  token: undefined,
+  name: string,
+) {
+  return apiRequest<RoomParticipant>(`/rooms/${roomId}/guest-join`, {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
+
 export function getPendingUsers(token: string, roomId: string) {
   return apiRequest<RoomParticipant[]>(`/rooms/${roomId}/pending`, {
     method: "GET",

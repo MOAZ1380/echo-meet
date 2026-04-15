@@ -164,14 +164,14 @@ export class RoomService {
    * @param name Optional name for the participant (used for guests or can override user name).
    * @returns Newly created pending participant record.
    */
-  async requestJoin(roomId: string, userId?: string, name?: string) {
+  async requestJoin(roomId: string, name?: string, userId?: string) {
     if (userId) {
       // registered user
       return this.prisma.roomParticipant.create({
         data: {
           roomId,
-          userId,
           name: name || 'User',
+          userId,
         },
       });
     } else {

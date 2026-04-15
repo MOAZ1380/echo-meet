@@ -109,7 +109,18 @@ export class RoomController {
     @Body('name') name: string,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.roomService.requestJoin(roomId, req.userId, name);
+    return this.roomService.requestJoin(roomId, name || 'Guest', req.userId);
+  }
+
+  /**
+   *
+   * @param roomId
+   * @param name
+   * @returns
+   */
+  @Post(':id/guest-join')
+  guestJoin(@Param('id') roomId: string, @Body('name') name: string) {
+    return this.roomService.requestJoin(roomId, undefined, name);
   }
 
   /**
