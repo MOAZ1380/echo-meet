@@ -17,13 +17,48 @@ model User {
   resetOtpExpiresAt DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  rooms             Room[]
+
+  ownedRooms        Room[]   @relation("RoomOwner")
+
+  participants      RoomParticipant[]
 }
+
 
 model Room {
   id        String   @id @default(uuid())
   startTime DateTime @default(now())
-  status    String   @default("active")
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  status    RoomStatus @default(active)
+
+  ownerId   String
+  owner     User     @relation("RoomOwner", fields: [ownerId], references: [id])
+
+  participants RoomParticipant[]
+}
+
+
+model RoomParticipant {
+  id      String @id @default(uuid())
+
+  roomId  String
+  userId  String
+
+  status  ParticipantStatus @default(pending)
+
+  room Room @relation(fields: [roomId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([roomId, userId]) 
+}
+
+
+enum RoomStatus {
+  active
+  completed
+  cancelled
+}
+
+enum ParticipantStatus {
+  pending
+  approved
+  rejected
 }

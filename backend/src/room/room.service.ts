@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
+import { RoomStatus } from '@prisma/client';
 
 @Injectable()
 export class RoomService {
@@ -28,8 +29,8 @@ export class RoomService {
     const room = await this.prisma.room.create({
       data: {
         startTime,
-        status: data.status ?? 'active',
-        user: {
+        status: data.status || RoomStatus.active,
+        owner: {
           connect: {
             id: userId,
           },
@@ -45,7 +46,7 @@ export class RoomService {
    */
   async findAll() {
     return this.prisma.room.findMany({
-      include: { user: true },
+      include: { owner: true },
     });
   }
 
@@ -55,7 +56,7 @@ export class RoomService {
   async findOne(id: string) {
     const room = await this.prisma.room.findUnique({
       where: { id },
-      include: { user: true },
+      include: { owner: true },
     });
 
     return room;
@@ -70,7 +71,7 @@ export class RoomService {
     }
 
     const room = await this.prisma.room.findFirst({
-      where: { id, userId },
+      where: { id, ownerId: userId },
     });
 
     if (!room) {
@@ -80,8 +81,8 @@ export class RoomService {
     const updatedRoom = await this.prisma.room.update({
       where: { id },
       data: {
-        ...data,
         startTime: data.startTime ? new Date(data.startTime) : undefined,
+        status: data.status,
       },
     });
 
@@ -93,7 +94,7 @@ export class RoomService {
    */
   async remove(id: string, userId: string) {
     const room = await this.prisma.room.findFirst({
-      where: { id, userId },
+      where: { id, ownerId: userId },
     });
 
     if (!room) {

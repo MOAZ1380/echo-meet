@@ -1,4 +1,5 @@
-import { IsDateString, IsIn, IsOptional } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional } from 'class-validator';
+import { $Enums } from '@prisma/client';
 
 export class UpdateRoomDto {
   @IsOptional()
@@ -6,6 +7,6 @@ export class UpdateRoomDto {
   startTime?: string;
 
   @IsOptional()
-  @IsIn(['active', 'ended'])
-  status?: string;
+  @IsEnum($Enums.RoomStatus)
+  status?: $Enums.RoomStatus;
 }
