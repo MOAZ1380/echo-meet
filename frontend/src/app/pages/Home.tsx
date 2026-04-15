@@ -25,6 +25,7 @@ export const Home: React.FC = () => {
       return;
     }
 
+    // create room in database
     const meetingCode = generateMeetingCode();
     navigate(`/lobby/${meetingCode}`);
   };

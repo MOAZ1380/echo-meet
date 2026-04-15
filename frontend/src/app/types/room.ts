@@ -1,5 +1,3 @@
-import { apiRequest, authHeaders } from "../api/client";
-
 export type RoomStatus = "active" | "ended" | string;
 export type ParticipantStatus = "pending" | "approved" | "rejected";
 
@@ -39,78 +37,48 @@ export type ServiceResult = {
   success: boolean;
 };
 
-export function getRooms(token: string) {
-  return apiRequest<Room[]>("/rooms", {
-    method: "GET",
-    headers: authHeaders(token),
-  });
-}
+// Socket event types
+export type JoinRequestEvent = {
+  roomId: string;
+  userId: string;
+  participant?: RoomParticipant;
+};
 
-export function createRoom(token: string, payload: CreateRoomPayload = {}) {
-  return apiRequest<Room>("/rooms", {
-    method: "POST",
-    headers: authHeaders(token),
-    body: JSON.stringify(payload),
-  });
-}
+export type RoomDecisionEvent = {
+  roomId: string;
+};
 
-export function getRoomById(token: string, roomId: string) {
-  return apiRequest<Room>(`/rooms/${roomId}`, {
-    method: "GET",
-    headers: authHeaders(token),
-  });
-}
+export type UserJoinedEvent = {
+  userId: string;
+};
 
-export function updateRoom(
-  token: string,
-  roomId: string,
-  payload: UpdateRoomPayload,
-) {
-  return apiRequest<Room>(`/rooms/${roomId}`, {
-    method: "PATCH",
-    headers: authHeaders(token),
-    body: JSON.stringify(payload),
-  });
-}
+export type SocketErrorEvent = {
+  message?: string;
+};
 
-export function deleteRoom(token: string, roomId: string) {
-  return apiRequest<Room>(`/rooms/${roomId}`, {
-    method: "DELETE",
-    headers: authHeaders(token),
-  });
-}
+// Socket emit payloads
+export type RequestJoinPayload = {
+  roomId: string;
+  userId: string;
+};
 
-export function requestJoinRoom(token: string, roomId: string) {
-  return apiRequest<RoomParticipant>(`/rooms/${roomId}/join`, {
-    method: "POST",
-    headers: authHeaders(token),
-  });
-}
+export type ApproveUserPayload = {
+  roomId: string;
+  userId: string;
+  ownerId: string;
+};
 
-export function getPendingUsers(token: string, roomId: string) {
-  return apiRequest<RoomParticipant[]>(`/rooms/${roomId}/pending`, {
-    method: "GET",
-    headers: authHeaders(token),
-  });
-}
+export type RejectUserPayload = {
+  roomId: string;
+  userId: string;
+  ownerId: string;
+};
 
-export function approveUser(token: string, roomId: string, userId: string) {
-  return apiRequest<RoomParticipant>(`/rooms/${roomId}/approve/${userId}`, {
-    method: "PATCH",
-    headers: authHeaders(token),
-  });
-}
+export type JoinRoomPayload = {
+  roomId: string;
+  userId: string;
+};
 
-export function rejectUser(token: string, roomId: string, userId: string) {
-  return apiRequest<RoomParticipant>(`/rooms/${roomId}/reject/${userId}`, {
-    method: "PATCH",
-    headers: authHeaders(token),
-  });
-}
-
-export function getRoomToken(token: string, roomId: string) {
-  return apiRequest<string>(`/rooms/${roomId}/token`, {
-    method: "GET",
-    headers: authHeaders(token),
-  });
-}
+export type SocketResponse = {
+  success: boolean;
+};
