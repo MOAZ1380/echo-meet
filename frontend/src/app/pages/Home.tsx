@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router";
 import { motion } from "motion/react";
 import { Video, Plus, LogIn, ArrowRight, User } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { createRoom } from "../api/roomApi";
+import { createRoom, requestJoinRoom } from "../api/roomApi";
 
 /**
  * Home Page Component
@@ -31,10 +31,19 @@ export const Home: React.FC = () => {
   };
 
   const handleJoinMeeting = (e: React.FormEvent) => {
+    const requestJoin = async () => {
+      try {
+        await requestJoinRoom(token, joinCode.trim(), "Guest");
+        navigate(`/lobby/${joinCode.trim()}`);
+      } catch (error) {
+        console.error("Failed to join room:", error);
+        alert("Failed to join room. Please check the code and try again.");
+      }
+    };
     e.preventDefault();
-    if (joinCode.trim()) {
-      navigate(`/lobby/${joinCode.trim()}`);
-    }
+    // if (joinCode.trim()) {
+    //   navigate(`/lobby/${joinCode.trim()}`);
+    // }
   };
 
   return (

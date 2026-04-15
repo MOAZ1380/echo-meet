@@ -75,10 +75,11 @@ export function deleteRoom(token: string, roomId: string) {
   });
 }
 
-export function requestJoinRoom(token: string, roomId: string) {
+export function requestJoinRoom(token: string, roomId: string, name: string) {
   return apiRequest<RoomParticipant>(`/rooms/${roomId}/join`, {
     method: "POST",
     headers: authHeaders(token),
+    body: JSON.stringify({ name }),
   });
 }
 
