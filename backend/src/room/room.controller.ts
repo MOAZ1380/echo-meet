@@ -104,8 +104,12 @@ export class RoomController {
    * @returns Newly created pending participant record.
    */
   @Post(':id/join')
-  requestJoin(@Param('id') roomId: string, @Req() req: AuthenticatedRequest) {
-    return this.roomService.requestJoin(roomId, req.userId);
+  requestJoin(
+    @Param('id') roomId: string,
+    @Body('name') name: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.roomService.requestJoin(roomId, req.userId, name);
   }
 
   /**

@@ -26,6 +26,7 @@ model User {
 
 model Room {
   id        String   @id @default(uuid())
+  code      String   @unique
   startTime DateTime @default(now())
   status    RoomStatus @default(active)
 
@@ -37,17 +38,18 @@ model Room {
 
 
 model RoomParticipant {
-  id      String @id @default(uuid())
+  id        String @id @default(uuid())
 
-  roomId  String
-  userId  String
+  roomId    String
+  userId    String? 
+  name      String
 
-  status  ParticipantStatus @default(pending)
+  status    ParticipantStatus @default(pending)
 
   room Room @relation(fields: [roomId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
-  @@unique([roomId, userId]) 
+  @@unique([roomId, userId])
 }
 
 

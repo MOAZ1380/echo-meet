@@ -267,7 +267,6 @@ export function useMeetingRoom(displayName: string) {
   const joinMeeting = useCallback(
     async (roomId: string) => {
       const livekitUrl = (import.meta as EnvImportMeta).env.VITE_LIVEKIT_URL;
-      console.log("Joining room:", livekitUrl, roomId, displayName);
       if (!livekitUrl) {
         throw new Error("VITE_LIVEKIT_URL is not configured");
       }

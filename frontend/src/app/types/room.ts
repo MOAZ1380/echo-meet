@@ -15,6 +15,7 @@ export type RoomParticipant = {
 };
 
 export type Room = {
+  code: string;
   id: string;
   startTime: string;
   status: RoomStatus;

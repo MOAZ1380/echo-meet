@@ -42,11 +42,10 @@ export function getRooms(token: string) {
   });
 }
 
-export function createRoom(token: string, payload: CreateRoomPayload = {}) {
+export function createRoom(token: string) {
   return apiRequest<Room>("/rooms", {
     method: "POST",
     headers: authHeaders(token),
-    body: JSON.stringify(payload),
   });
 }
 

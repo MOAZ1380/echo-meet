@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router";
 import { motion } from "motion/react";
 import { Video, Plus, LogIn, ArrowRight, User } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { createRoom } from "../api/roomApi";
 
 /**
  * Home Page Component
@@ -12,22 +13,21 @@ import { useAuth } from "../hooks/useAuth";
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState("");
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, token } = useAuth();
 
   // Generate random meeting code
   const generateMeetingCode = () => {
     return Math.random().toString(36).substring(2, 12).toUpperCase();
   };
 
-  const handleCreateMeeting = () => {
+  const handleCreateMeeting = async () => {
     if (!isAuthenticated) {
       navigate("/login");
       return;
     }
 
-    // create room in database
-    const meetingCode = generateMeetingCode();
-    navigate(`/lobby/${meetingCode}`);
+    const newRoom = await createRoom(token);
+    navigate(`/lobby/${newRoom.code}`);
   };
 
   const handleJoinMeeting = (e: React.FormEvent) => {

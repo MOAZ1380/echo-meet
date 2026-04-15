@@ -8,6 +8,7 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { RoomStatus } from '@prisma/client';
 import { LivekitService } from '../livekit/livekit.service';
+import { nanoid } from 'nanoid';
 
 @Injectable()
 /**
@@ -43,6 +44,7 @@ export class RoomService {
 
     const room = await this.prisma.room.create({
       data: {
+        code: nanoid(10),
         startTime: data.startTime ? new Date(data.startTime) : new Date(),
         status: data.status ?? RoomStatus.active,
         ownerId: userId,
@@ -151,33 +153,36 @@ export class RoomService {
   }
 
   /**
-   * Create a join request for a room.
+   * Request to join a room.
    *
    * Rules:
-   * - A user can only have one participant record per room.
-   * - New request is created with `pending` status.
+   * - If `userId` is provided, creates a pending participant record linked to the user.
+   * - If no `userId`, creates a guest participant record with a generated name.
    *
    * @param roomId Target room id.
-   * @param userId Requesting user id.
-   * @throws BadRequestException If request already exists.
-   * @returns Created participant record.
+   * @param userId Optional authenticated user id (null for guests).
+   * @param name Optional name for the participant (used for guests or can override user name).
+   * @returns Newly created pending participant record.
    */
-  async requestJoin(roomId: string, userId: string) {
-    const existing = await this.prisma.roomParticipant.findFirst({
-      where: { roomId, userId },
-    });
-
-    if (existing) {
-      throw new BadRequestException('Already requested');
+  async requestJoin(roomId: string, userId?: string, name?: string) {
+    if (userId) {
+      // registered user
+      return this.prisma.roomParticipant.create({
+        data: {
+          roomId,
+          userId,
+          name: name || 'User',
+        },
+      });
+    } else {
+      // guest
+      return this.prisma.roomParticipant.create({
+        data: {
+          roomId,
+          name: name || `Guest-${Date.now()}`,
+        },
+      });
     }
-
-    return this.prisma.roomParticipant.create({
-      data: {
-        roomId,
-        userId,
-        status: 'pending',
-      },
-    });
   }
 
   /**
