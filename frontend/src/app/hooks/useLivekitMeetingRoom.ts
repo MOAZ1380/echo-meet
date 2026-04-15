@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
 import { getLivekitToken } from "../api/livekitApi";
 import type { ChatMessage, Participant } from "../types/meeting";
+import { socket } from "../services/socketService";
 
 type RemoteParticipantWithStream = Participant & {
   stream: MediaStream | null;
@@ -44,6 +45,7 @@ export function useMeetingRoom(displayName: string) {
   const [micEnabled, setMicEnabled] = useState(false);
   const [camEnabled, setCamEnabled] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
 
   const roomRef = useRef<Room | null>(null);
   const roomIdRef = useRef("");
@@ -86,6 +88,29 @@ export function useMeetingRoom(displayName: string) {
     }
 
     return stream.getTracks().length > 0 ? stream : null;
+  }, []);
+
+  useEffect(() => {
+    function onApproved(data: { roomId: string }) {
+      if (data.roomId === roomIdRef.current) {
+        setIsApproved(true);
+      }
+    }
+
+    function onRejected(data: { roomId: string }) {
+      if (data.roomId === roomIdRef.current) {
+        setIsApproved(false);
+        leaveMeeting();
+      }
+    }
+
+    socket.on("room:approved", onApproved);
+    socket.on("room:rejected", onRejected);
+
+    return () => {
+      socket.off("room:approved", onApproved);
+      socket.off("room:rejected", onRejected);
+    };
   }, []);
 
   // Convert LiveKit remote participants into the shape used by the UI.
@@ -179,8 +204,6 @@ export function useMeetingRoom(displayName: string) {
           if (!room) return;
 
           if (participant.identity !== localUserIdRef.current) return;
-
-          console.log(`${participant.identity} joined the room`);
 
           room.localParticipant.publishData(
             textEncoder.encode(

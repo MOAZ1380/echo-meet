@@ -20,6 +20,7 @@ import { ChatPanel } from "../components/ChatPanel";
 import { ParticipantsPanel } from "../components/ParticipantsPanel";
 import type { Participant } from "../types/meeting";
 import { useMeetingRoom } from "../hooks/useLivekitMeetingRoom";
+import { socket } from "../services/socketService";
 
 /**
  * MeetingRoom Page Component
