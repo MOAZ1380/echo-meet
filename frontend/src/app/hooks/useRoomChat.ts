@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { socket } from "../services/socketService";
 import type { ChatMessage } from "../types/chat";
 import { getJsonCookie } from "../utils/cookies";
+import { getRoomById } from "../api/roomApi";
 
 type StoredUser = {
   id?: string;
@@ -122,13 +123,12 @@ export function useRoomChat() {
   }
 
   // Emit join request for a specific room.
-  function requestJoin(roomId: string, userId?: string) {
+  async function requestJoin(roomId: string, name: string, userId?: string) {
     const resolvedUserId = userId?.trim() || getCurrentUserId();
-
-    if (!resolvedUserId) return;
 
     socket.emit("requestJoin", {
       roomId,
+      name,
       userId: resolvedUserId,
     });
   }
@@ -178,8 +178,8 @@ export function useRoomChat() {
     lastRejectedRoomId,
     lastJoinedUserId,
     lastError,
-    joinRoom,
     requestJoin,
+    joinRoom,
     approveUser,
     rejectUser,
     sendMessage,

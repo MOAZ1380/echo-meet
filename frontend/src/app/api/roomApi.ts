@@ -49,10 +49,9 @@ export function createRoom(token: string) {
   });
 }
 
-export function getRoomById(token: string, roomId: string) {
+export function getRoomById(roomId: string) {
   return apiRequest<Room>(`/rooms/${roomId}`, {
     method: "GET",
-    headers: authHeaders(token),
   });
 }
 

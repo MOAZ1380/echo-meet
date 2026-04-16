@@ -79,7 +79,7 @@ export class RoomService {
    */
   async findOne(id: string) {
     const room = await this.prisma.room.findUnique({
-      where: { id },
+      where: { code: id },
       include: {
         owner: true,
         participants: true,

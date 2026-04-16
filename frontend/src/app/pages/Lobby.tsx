@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { Video, VideoOff, Mic, MicOff, ArrowRight } from "lucide-react";
 import { useMediaStream } from "../hooks/useMediaStream";
 import { useAuth } from "../hooks/useAuth";
-import { requestGuestJoinRoom, requestJoinRoom } from "../api/roomApi";
+import { useRoomChat } from "../hooks/useRoomChat";
 
 /**
  * Lobby Page Component
@@ -13,6 +13,7 @@ import { requestGuestJoinRoom, requestJoinRoom } from "../api/roomApi";
 
 export const Lobby: React.FC = () => {
   const { user, isAuthenticated, token } = useAuth();
+  const { requestJoin } = useRoomChat();
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
   const [userName, setUserName] = useState(user?.name ?? "");
@@ -76,7 +77,12 @@ export const Lobby: React.FC = () => {
   const handleJoinMeeting = () => {
     const finalName = userName.trim() || user?.name || "Anonymous";
 
-    // send event for the owner to join the room
+    // send event for the owner to join the room if not the owner, otherwise just navigate to the meeting page
+    if (user?.id) {
+      requestJoin(meetingId!, finalName, user.id);
+    } else {
+      requestJoin(meetingId!, finalName);
+    }
 
     if (!meetingId) return;
     navigate(`/meeting/${meetingId}`, {

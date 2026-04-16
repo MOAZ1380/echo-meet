@@ -13,7 +13,7 @@ import { createRoom } from "../api/roomApi";
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState("");
-  const { isAuthenticated, logout, token } = useAuth();
+  const { isAuthenticated, logout, token, user } = useAuth();
 
   const handleCreateMeeting = async () => {
     if (!isAuthenticated) {
@@ -22,7 +22,16 @@ export const Home: React.FC = () => {
     }
 
     const newRoom = await createRoom(token);
-    navigate(`/lobby/${newRoom.code}`);
+    console.log("Created room:", newRoom);
+    navigate(`/meeting/${newRoom.code}`, {
+      state: {
+        userName: user?.name,
+        mediaPreferences: {
+          micOn: true,
+          cameraOn: true,
+        },
+      },
+    });
   };
 
   const handleJoinMeeting = (e: React.FormEvent) => {
