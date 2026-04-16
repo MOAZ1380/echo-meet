@@ -101,6 +101,12 @@ export class MeetingGateway implements OnModuleInit {
 
     this.server.to(data.userId).emit('room:approved', {
       roomId: data.roomId,
+      userId: data.userId,
+    });
+
+    this.server.to(data.ownerId).emit('room:approved', {
+      roomId: data.roomId,
+      userId: data.userId,
     });
 
     return { success: true };
@@ -124,6 +130,8 @@ export class MeetingGateway implements OnModuleInit {
 
     this.server.to(data.userId).emit('room:rejected', {
       roomId: data.roomId,
+      userId: data.userId,
+      reason: 'غير مسموح لك بالانضمام إلى هذه الغرفة.',
     });
 
     return { success: true };

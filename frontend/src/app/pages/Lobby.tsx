@@ -1,7 +1,14 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { Video, VideoOff, Mic, MicOff, ArrowRight } from "lucide-react";
+import {
+  Video,
+  VideoOff,
+  Mic,
+  MicOff,
+  ArrowRight,
+  LoaderCircle,
+} from "lucide-react";
 import { useMediaStream } from "../hooks/useMediaStream";
 import { useAuth } from "../hooks/useAuth";
 import { useRoomChat } from "../hooks/useRoomChat";
@@ -12,9 +19,15 @@ import { useRoomChat } from "../hooks/useRoomChat";
  */
 
 export const Lobby: React.FC = () => {
-  const { user, isAuthenticated, token } = useAuth();
+  const { user } = useAuth();
   const [isWaiting, setIsWaiting] = useState(false);
-  const { requestJoin, lastApprovedRoomId, lastRejectedRoomId } = useRoomChat();
+  const [rejectionMessage, setRejectionMessage] = useState("");
+  const {
+    requestJoin,
+    lastApprovedRoomId,
+    lastRejectedRoomId,
+    lastRejectedReason,
+  } = useRoomChat();
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
   const [userName, setUserName] = useState(user?.name ?? "");
@@ -77,6 +90,8 @@ export const Lobby: React.FC = () => {
 
   useEffect(() => {
     if (lastApprovedRoomId === meetingId) {
+      setIsWaiting(false);
+      setRejectionMessage("");
       navigate(`/meeting/${meetingId}`, {
         state: {
           userName,
@@ -87,23 +102,29 @@ export const Lobby: React.FC = () => {
         },
       });
     }
-  }, [lastApprovedRoomId]);
+  }, [isCameraOn, isMicOn, lastApprovedRoomId, meetingId, navigate, userName]);
 
   useEffect(() => {
     if (lastRejectedRoomId === meetingId) {
-      alert("تم رفض طلبك ❌");
+      setIsWaiting(false);
+      setRejectionMessage(
+        lastRejectedReason || "غير مسموح لك بالانضمام إلى هذه الغرفة.",
+      );
     }
-  }, [lastRejectedRoomId]);
+  }, [lastRejectedReason, lastRejectedRoomId, meetingId]);
 
   const handleJoinMeeting = () => {
+    if (!meetingId || isWaiting) return;
+
     const finalName = userName.trim() || user?.name || "Anonymous";
 
+    setRejectionMessage("");
     setIsWaiting(true);
     // send event for the owner to join the room if not the owner, otherwise just navigate to the meeting page
     if (user?.id) {
-      requestJoin(meetingId!, finalName, user.id);
+      requestJoin(meetingId, finalName, user.id);
     } else {
-      requestJoin(meetingId!, finalName);
+      requestJoin(meetingId, finalName);
     }
   };
 
@@ -317,8 +338,27 @@ export const Lobby: React.FC = () => {
                   </div>
 
                   {isWaiting && (
-                    <div className="text-center text-gray-400">
-                      <p>Waiting for the meeting to start...</p>
+                    <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-4">
+                      <div className="flex items-center gap-3 text-amber-200">
+                        <LoaderCircle className="h-5 w-5 animate-spin" />
+                        <p className="text-sm font-medium">
+                          Waiting for host approval...
+                        </p>
+                      </div>
+                      <p className="mt-2 text-xs text-amber-100/80">
+                        You will be redirected automatically once approved.
+                      </p>
+                    </div>
+                  )}
+
+                  {rejectionMessage && (
+                    <div className="rounded-xl border border-red-400/40 bg-red-500/10 p-4">
+                      <p className="text-sm font-semibold text-red-200">
+                        Access denied
+                      </p>
+                      <p className="mt-1 text-sm text-red-100/90">
+                        {rejectionMessage}
+                      </p>
                     </div>
                   )}
 
@@ -326,11 +366,17 @@ export const Lobby: React.FC = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleJoinMeeting}
-                    disabled={!userName.trim() && !user?.name?.trim()}
+                    disabled={
+                      isWaiting || (!userName.trim() && !user?.name?.trim())
+                    }
                     className="w-full bg-[var(--echo-primary)] hover:bg-[var(--echo-primary-hover)] text-white py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30"
                   >
-                    Join Meeting
-                    <ArrowRight className="w-5 h-5" />
+                    {isWaiting ? "Request Sent" : "Join Meeting"}
+                    {isWaiting ? (
+                      <LoaderCircle className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <ArrowRight className="w-5 h-5" />
+                    )}
                   </motion.button>
 
                   <button

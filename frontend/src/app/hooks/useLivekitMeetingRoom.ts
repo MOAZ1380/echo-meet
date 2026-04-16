@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
 import { getLivekitToken } from "../api/livekitApi";
 import type { ChatMessage, Participant } from "../types/meeting";
-import { socket } from "../services/socketService";
+import { socket, syncSocketIdentity } from "../services/socketService";
 
 type RemoteParticipantWithStream = Participant & {
   stream: MediaStream | null;
@@ -91,6 +91,8 @@ export function useMeetingRoom(displayName: string) {
   }, []);
 
   useEffect(() => {
+    syncSocketIdentity();
+
     function onApproved(data: { roomId: string }) {
       if (data.roomId === roomIdRef.current) {
         setIsApproved(true);

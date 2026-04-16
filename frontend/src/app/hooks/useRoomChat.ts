@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { socket } from "../services/socketService";
+import { socket, syncSocketIdentity } from "../services/socketService";
 import type { ChatMessage } from "../types/chat";
 import { getJsonCookie } from "../utils/cookies";
-import { getRoomById } from "../api/roomApi";
 
 type StoredUser = {
   id?: string;
@@ -16,6 +15,8 @@ type JoinRequestEvent = {
 
 type RoomDecisionEvent = {
   roomId: string;
+  userId?: string;
+  reason?: string;
 };
 
 type UserJoinedEvent = {
@@ -43,12 +44,14 @@ export function useRoomChat() {
   const [joinRequests, setJoinRequests] = useState<JoinRequestEvent[]>([]);
   const [lastApprovedRoomId, setLastApprovedRoomId] = useState("");
   const [lastRejectedRoomId, setLastRejectedRoomId] = useState("");
+  const [lastRejectedReason, setLastRejectedReason] = useState("");
   const [lastJoinedUserId, setLastJoinedUserId] = useState("");
   const [lastError, setLastError] = useState("");
-  const [Allowed, setAllowed] = useState(false);
 
   // Wire socket lifecycle and message events into React state.
   useEffect(() => {
+    syncSocketIdentity();
+
     function onConnect() {
       setSocketStatus("connected");
     }
@@ -66,21 +69,35 @@ export function useRoomChat() {
       setJoinRequests((prev) => [...prev, data]);
     }
 
-    function onApproved(data: RoomDecisionEvent & { userId?: string }) {
+    function onApproved(data: RoomDecisionEvent) {
       setLastApprovedRoomId(data.roomId);
 
-      setJoinRequests((prev) =>
-        prev.filter(
+      setJoinRequests((prev) => {
+        if (!data.userId) {
+          return prev.filter((req) => req.roomId !== data.roomId);
+        }
+
+        return prev.filter(
           (req) => !(req.roomId === data.roomId && req.userId === data.userId),
-        ),
-      );
+        );
+      });
     }
     function onRejected(data: RoomDecisionEvent) {
       console.log("❌ rejected event received", data);
       setLastRejectedRoomId(data.roomId);
-      setJoinRequests((prev) =>
-        prev.filter((req) => req.roomId !== data.roomId),
+      setLastRejectedReason(
+        data.reason ?? "غير مسموح لك بالانضمام إلى هذه الغرفة.",
       );
+
+      setJoinRequests((prev) => {
+        if (!data.userId) {
+          return prev.filter((req) => req.roomId !== data.roomId);
+        }
+
+        return prev.filter(
+          (req) => !(req.roomId === data.roomId && req.userId === data.userId),
+        );
+      });
     }
 
     function onUserJoined(data: UserJoinedEvent) {
@@ -150,6 +167,10 @@ export function useRoomChat() {
     console.log("🚀 approving user", roomId, userId);
     if (!resolvedOwnerId || !userId) return;
 
+    setJoinRequests((prev) =>
+      prev.filter((req) => !(req.roomId === roomId && req.userId === userId)),
+    );
+
     socket.emit("approveUser", {
       roomId,
       userId,
@@ -162,6 +183,10 @@ export function useRoomChat() {
     const resolvedOwnerId = ownerId?.trim() || getCurrentUserId();
 
     if (!resolvedOwnerId || !userId) return;
+
+    setJoinRequests((prev) =>
+      prev.filter((req) => !(req.roomId === roomId && req.userId === userId)),
+    );
 
     socket.emit("rejectUser", {
       roomId,
@@ -187,6 +212,7 @@ export function useRoomChat() {
     joinRequests,
     lastApprovedRoomId,
     lastRejectedRoomId,
+    lastRejectedReason,
     lastJoinedUserId,
     lastError,
     requestJoin,
