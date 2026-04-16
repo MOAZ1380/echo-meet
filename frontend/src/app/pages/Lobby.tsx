@@ -108,7 +108,8 @@ export const Lobby: React.FC = () => {
     if (lastRejectedRoomId === meetingId) {
       setIsWaiting(false);
       setRejectionMessage(
-        lastRejectedReason || "غير مسموح لك بالانضمام إلى هذه الغرفة.",
+        lastRejectedReason ||
+          "Your request to join the meeting was rejected by the host.",
       );
     }
   }, [lastRejectedReason, lastRejectedRoomId, meetingId]);

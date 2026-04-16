@@ -74,6 +74,7 @@ export class MeetingGateway implements OnModuleInit {
 
     const room = await this.roomService.findOne(data.roomId);
 
+    // return id if user is guest (no userId), otherwise return userId
     this.server.to(room.ownerId).emit('room:join-request', {
       roomId: data.roomId,
       userId: data.userId,

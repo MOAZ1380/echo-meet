@@ -181,9 +181,14 @@ export class RoomService {
     if (!room) {
       throw new NotFoundException('Room not found');
     }
-
+    console.log('🔥 requestJoin', { roomId, name, userId });
     if (userId) {
       // registered user
+      console.log('🔥 requestJoin for registered user', {
+        roomId,
+        name,
+        userId,
+      });
       return this.prisma.roomParticipant.upsert({
         where: {
           roomId_userId: {
@@ -203,10 +208,14 @@ export class RoomService {
       });
     } else {
       // guest
+      console.log('🔥 requestJoin for guest', { roomId, name });
+
       return this.prisma.roomParticipant.create({
         data: {
           roomId: room.id,
           name: name || `Guest-${Date.now()}`,
+          userId: null,
+          status: 'pending',
         },
       });
     }
@@ -253,18 +262,39 @@ export class RoomService {
     if (!room || room.ownerId !== ownerId) {
       throw new BadRequestException('Not allowed');
     }
-
-    return this.prisma.roomParticipant.update({
-      where: {
-        roomId_userId: {
+    // if targetUserId is null, it means it's a guest participant, so we need to find the participant record by roomId and name instead of userId
+    if (!targetUserId) {
+      const participant = await this.prisma.roomParticipant.findFirst({
+        where: {
           roomId: room.id,
-          userId: targetUserId,
+          id: targetUserId,
+          status: 'pending',
         },
-      },
-      data: {
-        status: 'approved',
-      },
-    });
+      });
+
+      if (!participant) {
+        throw new NotFoundException('Participant not found');
+      }
+
+      return this.prisma.roomParticipant.update({
+        where: { id: participant.id },
+        data: {
+          status: 'approved',
+        },
+      });
+    } else {
+      return this.prisma.roomParticipant.update({
+        where: {
+          roomId_userId: {
+            roomId: room.id,
+            userId: targetUserId,
+          },
+        },
+        data: {
+          status: 'approved',
+        },
+      });
+    }
   }
 
   /**

@@ -10,7 +10,11 @@ type StoredUser = {
 type JoinRequestEvent = {
   roomId: string;
   userId: string;
-  participant?: unknown;
+  paricipant: {
+    id: string;
+    name: string;
+    status: string;
+  };
 };
 
 type RoomDecisionEvent = {
@@ -31,7 +35,7 @@ const USER_COOKIE_KEY = "echo_user";
 
 function getCurrentUserId() {
   const user = getJsonCookie<StoredUser>(USER_COOKIE_KEY);
-  return user?.id ?? "";
+  return user?.id ?? undefined;
 }
 
 // Legacy socket-based room chat hook.
@@ -65,7 +69,6 @@ export function useRoomChat() {
     }
 
     function onJoinRequest(data: JoinRequestEvent) {
-      console.log("🔥 join request received", data);
       setJoinRequests((prev) => [...prev, data]);
     }
 
@@ -153,7 +156,7 @@ export function useRoomChat() {
   // Emit join request for a specific room.
   async function requestJoin(roomId: string, name: string, userId?: string) {
     const resolvedUserId = userId?.trim() || getCurrentUserId();
-
+    console.log("🚀 requesting join", roomId, name, resolvedUserId);
     socket.emit("requestJoin", {
       roomId,
       name,
@@ -162,10 +165,12 @@ export function useRoomChat() {
   }
 
   // Owner emits approve action for a pending user.
-  function approveUser(roomId: string, userId: string, ownerId?: string) {
+  function approveUser(
+    roomId: string,
+    userId: string | undefined = undefined,
+    ownerId?: string,
+  ) {
     const resolvedOwnerId = ownerId?.trim() || getCurrentUserId();
-    console.log("🚀 approving user", roomId, userId);
-    if (!resolvedOwnerId || !userId) return;
 
     setJoinRequests((prev) =>
       prev.filter((req) => !(req.roomId === roomId && req.userId === userId)),
@@ -179,7 +184,11 @@ export function useRoomChat() {
   }
 
   // Owner emits reject action for a pending user.
-  function rejectUser(roomId: string, userId: string, ownerId?: string) {
+  function rejectUser(
+    roomId: string,
+    userId: string | undefined,
+    ownerId?: string,
+  ) {
     const resolvedOwnerId = ownerId?.trim() || getCurrentUserId();
 
     if (!resolvedOwnerId || !userId) return;
