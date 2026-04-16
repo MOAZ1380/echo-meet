@@ -1,11 +1,86 @@
+# Echo Meet Frontend
 
-  # Echo Meet UI Design
+React + Vite client for Echo Meet. It handles authentication screens, lobby flow, realtime join approvals, and LiveKit meeting room UI.
 
-  This is a code bundle for Echo Meet UI Design. The original project is available at https://www.figma.com/design/Y7wOeeXsbeVBE64Jk8Uf7m/Echo-Meet-UI-Design.
+## Features
 
-  ## Running the code
+- Authentication pages (login, register, forgot/reset password)
+- Room lobby and waiting workflow
+- Meeting room with video/audio and chat
+- Realtime updates via Socket.IO
+- API integration with backend (JWT-based flows)
 
-  Run `npm i` to install the dependencies.
+## Tech Stack
 
-  Run `npm run dev` to start the development server.
-  
+- React 18 + TypeScript
+- Vite
+- LiveKit Client
+- Socket.IO Client
+- Tailwind CSS + UI component libraries
+
+## Setup
+
+```bash
+npm install
+```
+
+Create `.env` in `frontend/`:
+
+```env
+VITE_API_URL="http://localhost:3000"
+VITE_LIVEKIT_URL="ws://localhost:7880"
+```
+
+Run development server:
+
+```bash
+npm run dev
+```
+
+## Routes
+
+- `/` -> Home
+- `/login` -> Login
+- `/register` -> Register
+- `/forgot-password` -> Request reset OTP
+- `/reset-code` -> Verify reset code
+- `/new-password` -> Set new password
+- `/lobby/:meetingId` -> Waiting room / approval stage
+- `/meeting/:meetingId` -> Live meeting room
+
+## Backend Integration Notes
+
+- REST API base URL comes from `VITE_API_URL`
+- LiveKit URL comes from `VITE_LIVEKIT_URL`
+- Socket.IO URL is currently fixed in code to `http://localhost:8000`
+  - If your backend socket port changes, update `src/app/services/socketService.ts`
+
+## Build
+
+```bash
+npm run build
+```
+
+## Screenshots Placeholder
+
+Put frontend images in `docs/images/frontend/`.
+
+### Home Page
+
+![Home Page](../docs/images/frontend/home.png)
+
+### Login / Register
+
+![Auth Pages](../docs/images/frontend/auth.png)
+
+### Lobby
+
+![Lobby](../docs/images/frontend/lobby.png)
+
+### Meeting Room
+
+![Meeting Room](../docs/images/frontend/meeting-room.png)
+
+### Chat and Participants Panel
+
+![Chat and Participants](../docs/images/frontend/chat-participants.png)
