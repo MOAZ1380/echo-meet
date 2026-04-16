@@ -120,7 +120,7 @@ export class RoomController {
    */
   @Post(':id/guest-join')
   guestJoin(@Param('id') roomId: string, @Body('name') name: string) {
-    return this.roomService.requestJoin(roomId, undefined, name);
+    return this.roomService.requestJoin(roomId, name);
   }
 
   /**

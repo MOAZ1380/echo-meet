@@ -20,6 +20,15 @@ export class RoomService {
     private readonly livekitService: LivekitService,
   ) {}
 
+  // Accept either room code (public meeting id) or internal room id.
+  private async findRoomByCodeOrId(roomRef: string) {
+    return this.prisma.room.findFirst({
+      where: {
+        OR: [{ id: roomRef }, { code: roomRef }],
+      },
+    });
+  }
+
   /**
    * Create a new room for the provided owner.
    *
@@ -78,8 +87,10 @@ export class RoomService {
    * @returns Room record.
    */
   async findOne(id: string) {
-    const room = await this.prisma.room.findUnique({
-      where: { code: id },
+    const room = await this.prisma.room.findFirst({
+      where: {
+        OR: [{ id }, { code: id }],
+      },
       include: {
         owner: true,
         participants: true,
@@ -165,11 +176,27 @@ export class RoomService {
    * @returns Newly created pending participant record.
    */
   async requestJoin(roomId: string, name?: string, userId?: string) {
+    const room = await this.findRoomByCodeOrId(roomId);
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
     if (userId) {
       // registered user
-      return this.prisma.roomParticipant.create({
-        data: {
-          roomId,
+      return this.prisma.roomParticipant.upsert({
+        where: {
+          roomId_userId: {
+            roomId: room.id,
+            userId,
+          },
+        },
+        update: {
+          name: name || 'User',
+          status: 'pending',
+        },
+        create: {
+          roomId: room.id,
           name: name || 'User',
           userId,
         },
@@ -178,7 +205,7 @@ export class RoomService {
       // guest
       return this.prisma.roomParticipant.create({
         data: {
-          roomId,
+          roomId: room.id,
           name: name || `Guest-${Date.now()}`,
         },
       });
@@ -194,9 +221,7 @@ export class RoomService {
    * @returns Pending participants including user data.
    */
   async getPendingUsers(roomId: string, ownerId: string) {
-    const room = await this.prisma.room.findUnique({
-      where: { id: roomId },
-    });
+    const room = await this.findRoomByCodeOrId(roomId);
 
     if (!room || room.ownerId !== ownerId) {
       throw new BadRequestException('Not allowed');
@@ -204,7 +229,7 @@ export class RoomService {
 
     return this.prisma.roomParticipant.findMany({
       where: {
-        roomId,
+        roomId: room.id,
         status: 'pending',
       },
       include: {
@@ -223,9 +248,7 @@ export class RoomService {
    * @returns Updated participant record with `approved` status.
    */
   async approveUser(roomId: string, targetUserId: string, ownerId: string) {
-    const room = await this.prisma.room.findUnique({
-      where: { id: roomId },
-    });
+    const room = await this.findRoomByCodeOrId(roomId);
 
     if (!room || room.ownerId !== ownerId) {
       throw new BadRequestException('Not allowed');
@@ -234,7 +257,7 @@ export class RoomService {
     return this.prisma.roomParticipant.update({
       where: {
         roomId_userId: {
-          roomId,
+          roomId: room.id,
           userId: targetUserId,
         },
       },
@@ -254,9 +277,7 @@ export class RoomService {
    * @returns Updated participant record with `rejected` status.
    */
   async rejectUser(roomId: string, targetUserId: string, ownerId: string) {
-    const room = await this.prisma.room.findUnique({
-      where: { id: roomId },
-    });
+    const room = await this.findRoomByCodeOrId(roomId);
 
     if (!room || room.ownerId !== ownerId) {
       throw new BadRequestException('Not allowed');
@@ -265,7 +286,7 @@ export class RoomService {
     return this.prisma.roomParticipant.update({
       where: {
         roomId_userId: {
-          roomId,
+          roomId: room.id,
           userId: targetUserId,
         },
       },
@@ -287,9 +308,15 @@ export class RoomService {
    * @returns LiveKit token payload.
    */
   async generateToken(roomId: string, userId: string) {
+    const room = await this.findRoomByCodeOrId(roomId);
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
     const participant = await this.prisma.roomParticipant.findFirst({
       where: {
-        roomId,
+        roomId: room.id,
         userId,
         status: 'approved',
       },
@@ -299,6 +326,6 @@ export class RoomService {
       throw new BadRequestException('Not approved yet');
     }
 
-    return this.livekitService.createToken(userId, roomId);
+    return this.livekitService.createToken(userId, room.code);
   }
 }
