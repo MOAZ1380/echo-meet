@@ -96,6 +96,7 @@ export class MeetingGateway implements OnModuleInit {
   async approveUser(
     @MessageBody() data: { roomId: string; userId: string; ownerId: string },
   ) {
+    console.log('🔥 approveUser called', data);
     await this.roomService.approveUser(data.roomId, data.userId, data.ownerId);
 
     this.server.to(data.userId).emit('room:approved', {
@@ -118,6 +119,7 @@ export class MeetingGateway implements OnModuleInit {
   async rejectUser(
     @MessageBody() data: { roomId: string; userId: string; ownerId: string },
   ) {
+    console.log('🔥 rejectUser called', data);
     await this.roomService.rejectUser(data.roomId, data.userId, data.ownerId);
 
     this.server.to(data.userId).emit('room:rejected', {
@@ -146,6 +148,20 @@ export class MeetingGateway implements OnModuleInit {
 
     if (!room) {
       return client.emit('error', { message: 'Room not found' });
+    }
+
+    const participant = await this.roomService[
+      'prisma'
+    ].roomParticipant.findFirst({
+      where: {
+        roomId: room.id,
+        userId: data.userId,
+        status: 'approved',
+      },
+    });
+
+    if (!participant) {
+      return client.emit('error', { message: 'Not approved yet' });
     }
 
     client.join(room.id);

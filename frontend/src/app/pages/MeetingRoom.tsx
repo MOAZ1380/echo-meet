@@ -20,7 +20,8 @@ import { ChatPanel } from "../components/ChatPanel";
 import { ParticipantsPanel } from "../components/ParticipantsPanel";
 import type { Participant } from "../types/meeting";
 import { useMeetingRoom } from "../hooks/useLivekitMeetingRoom";
-import { socket } from "../services/socketService";
+import { useRoomChat } from "../hooks/useRoomChat";
+import { getJsonCookie } from "../utils/cookies";
 
 /**
  * MeetingRoom Page Component
@@ -41,6 +42,7 @@ type MeetingLocationState = {
 // Main meeting screen: connects LiveKit state, controls, and side panels.
 export const MeetingRoom: React.FC = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
+  const { joinRoom, joinRequests, approveUser, rejectUser } = useRoomChat();
   const navigate = useNavigate();
   const location = useLocation();
   const state = (location.state as MeetingLocationState | null) || null;
@@ -203,6 +205,16 @@ export const MeetingRoom: React.FC = () => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!meetingId) return;
+
+    const user = getJsonCookie<{ id?: string }>("echo_user");
+
+    if (!user?.id) return;
+
+    joinRoom(meetingId, user.id);
+  }, [meetingId]);
 
   // Toggle the active sidebar without leaving the meeting view.
   const handleToggleSidebar = (sidebar: SidebarType) => {
@@ -396,6 +408,42 @@ export const MeetingRoom: React.FC = () => {
       {socketStatus !== "connected" && (
         <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg">
           <p className="text-sm font-medium">Connecting to meeting...</p>
+        </div>
+      )}
+
+      {joinRequests.length > 0 && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-50 w-96 space-y-3">
+          {joinRequests.map((req, index) => (
+            <div
+              key={`${req.userId}-${req.roomId}-${index}`}
+              className="bg-gray-800 border border-gray-600 rounded-xl p-4 shadow-lg flex items-center justify-between"
+            >
+              <div>
+                <p className="text-white font-medium">
+                  {req.participant?.name || req.userId}
+                </p>
+                <p className="text-gray-400 text-sm">
+                  wants to join the meeting
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => approveUser(req.roomId, req.userId)}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm"
+                >
+                  Accept
+                </button>
+
+                <button
+                  onClick={() => rejectUser(req.roomId, req.userId)}
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

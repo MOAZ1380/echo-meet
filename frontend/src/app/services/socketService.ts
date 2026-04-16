@@ -1,5 +1,10 @@
 import { io } from "socket.io-client";
+import { getJsonCookie } from "../utils/cookies";
 
-export const socket = io(import.meta.env.VITE_SOCKET_URL, {
-  autoConnect: true,
+const user = getJsonCookie<{ id?: string }>("echo_user");
+
+export const socket = io("http://localhost:8000", {
+  query: {
+    userId: user?.id,
+  },
 });

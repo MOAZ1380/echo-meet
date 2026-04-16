@@ -45,6 +45,7 @@ export function useRoomChat() {
   const [lastRejectedRoomId, setLastRejectedRoomId] = useState("");
   const [lastJoinedUserId, setLastJoinedUserId] = useState("");
   const [lastError, setLastError] = useState("");
+  const [Allowed, setAllowed] = useState(false);
 
   // Wire socket lifecycle and message events into React state.
   useEffect(() => {
@@ -61,15 +62,25 @@ export function useRoomChat() {
     }
 
     function onJoinRequest(data: JoinRequestEvent) {
+      console.log("🔥 join request received", data);
       setJoinRequests((prev) => [...prev, data]);
     }
 
-    function onApproved(data: RoomDecisionEvent) {
+    function onApproved(data: RoomDecisionEvent & { userId?: string }) {
       setLastApprovedRoomId(data.roomId);
-    }
 
+      setJoinRequests((prev) =>
+        prev.filter(
+          (req) => !(req.roomId === data.roomId && req.userId === data.userId),
+        ),
+      );
+    }
     function onRejected(data: RoomDecisionEvent) {
+      console.log("❌ rejected event received", data);
       setLastRejectedRoomId(data.roomId);
+      setJoinRequests((prev) =>
+        prev.filter((req) => req.roomId !== data.roomId),
+      );
     }
 
     function onUserJoined(data: UserJoinedEvent) {
@@ -136,7 +147,7 @@ export function useRoomChat() {
   // Owner emits approve action for a pending user.
   function approveUser(roomId: string, userId: string, ownerId?: string) {
     const resolvedOwnerId = ownerId?.trim() || getCurrentUserId();
-
+    console.log("🚀 approving user", roomId, userId);
     if (!resolvedOwnerId || !userId) return;
 
     socket.emit("approveUser", {

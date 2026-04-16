@@ -13,7 +13,8 @@ import { useRoomChat } from "../hooks/useRoomChat";
 
 export const Lobby: React.FC = () => {
   const { user, isAuthenticated, token } = useAuth();
-  const { requestJoin } = useRoomChat();
+  const [isWaiting, setIsWaiting] = useState(false);
+  const { requestJoin, lastApprovedRoomId, lastRejectedRoomId } = useRoomChat();
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
   const [userName, setUserName] = useState(user?.name ?? "");
@@ -74,26 +75,36 @@ export const Lobby: React.FC = () => {
     toggleCamera();
   };
 
+  useEffect(() => {
+    if (lastApprovedRoomId === meetingId) {
+      navigate(`/meeting/${meetingId}`, {
+        state: {
+          userName,
+          mediaPreferences: {
+            micOn: isMicOn,
+            cameraOn: isCameraOn,
+          },
+        },
+      });
+    }
+  }, [lastApprovedRoomId]);
+
+  useEffect(() => {
+    if (lastRejectedRoomId === meetingId) {
+      alert("تم رفض طلبك ❌");
+    }
+  }, [lastRejectedRoomId]);
+
   const handleJoinMeeting = () => {
     const finalName = userName.trim() || user?.name || "Anonymous";
 
+    setIsWaiting(true);
     // send event for the owner to join the room if not the owner, otherwise just navigate to the meeting page
     if (user?.id) {
       requestJoin(meetingId!, finalName, user.id);
     } else {
       requestJoin(meetingId!, finalName);
     }
-
-    if (!meetingId) return;
-    navigate(`/meeting/${meetingId}`, {
-      state: {
-        userName: finalName,
-        mediaPreferences: {
-          micOn: isMicOn,
-          cameraOn: isCameraOn,
-        },
-      },
-    });
   };
 
   return (
@@ -304,6 +315,12 @@ export const Lobby: React.FC = () => {
                       </span>
                     </div>
                   </div>
+
+                  {isWaiting && (
+                    <div className="text-center text-gray-400">
+                      <p>Waiting for the meeting to start...</p>
+                    </div>
+                  )}
 
                   <motion.button
                     whileHover={{ scale: 1.02 }}
