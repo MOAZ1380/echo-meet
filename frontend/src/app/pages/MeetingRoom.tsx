@@ -12,6 +12,10 @@ import {
   Users,
   PhoneOff,
   MoreVertical,
+  ChevronDown,
+  Bell,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { VideoTile } from "../components/VideoTile";
@@ -64,6 +68,7 @@ export const MeetingRoom: React.FC = () => {
   const [activeSidebar, setActiveSidebar] = useState<SidebarType>(null);
   const [meetingDuration, setMeetingDuration] = useState("00:00");
   const [showControls, setShowControls] = useState(true);
+  const [showJoinRequestsPanel, setShowJoinRequestsPanel] = useState(false);
   const [joinPopupText, setJoinPopupText] = useState("");
   const [showJoinPopup, setShowJoinPopup] = useState(false);
   const previousRemoteIdsRef = useRef<string[]>([]);
@@ -423,45 +428,128 @@ export const MeetingRoom: React.FC = () => {
         </div>
       )}
 
-      {joinRequests.length > 0 && (
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-50 w-96 space-y-3">
-          {joinRequests.map((req, index) => (
-            <div
-              key={`${req.userId}-${req.roomId}-${index}`}
-              className="bg-gray-800 border border-gray-600 rounded-xl p-4 shadow-lg flex items-center justify-between"
+      <div className="absolute top-20 right-4 z-50 flex flex-col items-end gap-3">
+        <button
+          onClick={() => setShowJoinRequestsPanel((prev) => !prev)}
+          className="group inline-flex items-center gap-3 rounded-full border border-white/10 bg-slate-950/80 px-4 py-2.5 text-sm font-medium text-white shadow-xl backdrop-blur-md transition hover:bg-slate-900/90"
+        >
+          <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/20 transition group-hover:bg-emerald-500/25">
+            <Bell className="h-4 w-4" />
+            {joinRequests.length > 0 && (
+              <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-emerald-400 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-slate-950 shadow-sm">
+                {joinRequests.length}
+              </span>
+            )}
+          </span>
+          <span className="flex items-center gap-2">
+            Join requests
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${showJoinRequestsPanel ? "rotate-180" : ""}`}
+            />
+          </span>
+        </button>
+
+        <AnimatePresence>
+          {showJoinRequestsPanel && (
+            <motion.div
+              initial={{ opacity: 0, y: -12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.98 }}
+              transition={{ duration: 0.18 }}
+              className="w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-xl"
             >
-              <div>
-                <p className="text-white font-medium">
-                  {req.participant?.name || req.userId}
-                </p>
-                <p className="text-gray-400 text-sm">
-                  wants to join the meeting
-                </p>
-              </div>
-
-              <div className="flex gap-2">
+              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-white">
+                    Pending join requests
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Review who can enter the room.
+                  </p>
+                </div>
                 <button
-                  onClick={() =>
-                    approveUser(req.roomId, req.participant.id, currentUser?.id)
-                  }
-                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm"
+                  onClick={() => setShowJoinRequestsPanel(false)}
+                  className="rounded-full p-2 text-slate-400 transition hover:bg-white/5 hover:text-white"
+                  aria-label="Close join requests panel"
                 >
-                  Accept
-                </button>
-
-                <button
-                  onClick={() =>
-                    rejectUser(req.roomId, req.participant.id, currentUser?.id)
-                  }
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
-                >
-                  Reject
+                  <ChevronDown className="h-4 w-4 rotate-90" />
                 </button>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+
+              <div className="max-h-[28rem] space-y-3 overflow-y-auto p-3">
+                {joinRequests.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-8 text-center">
+                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-300">
+                      <UserCheck className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-medium text-white">
+                      No pending requests
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      New requests will appear here when someone asks to join.
+                    </p>
+                  </div>
+                ) : (
+                  joinRequests.map((req, index) => {
+                    const participantName = req.participant?.name || req.userId;
+                    const participantId = req.participant?.id || req.userId;
+
+                    return (
+                      <div
+                        key={`${req.userId}-${req.roomId}-${index}`}
+                        className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400/20 to-emerald-400/20 text-cyan-100 ring-1 ring-white/10">
+                            <UserX className="h-5 w-5" />
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-white">
+                              {participantName}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-400">
+                              Wants to join the meeting
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex gap-2">
+                          <button
+                            onClick={() =>
+                              approveUser(
+                                req.roomId,
+                                participantId,
+                                currentUser?.id,
+                              )
+                            }
+                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-600"
+                          >
+                            Accept
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              rejectUser(
+                                req.roomId,
+                                participantId,
+                                currentUser?.id,
+                              )
+                            }
+                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-rose-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-rose-600"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <AnimatePresence>
         {showJoinPopup && (
