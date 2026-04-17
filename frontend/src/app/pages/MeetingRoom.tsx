@@ -14,7 +14,6 @@ import {
   MoreVertical,
   ChevronDown,
   Bell,
-  UserCheck,
   UserX,
 } from "lucide-react";
 import { Navbar } from "../components/Navbar";
@@ -428,69 +427,55 @@ export const MeetingRoom: React.FC = () => {
         </div>
       )}
 
-      <div className="absolute top-20 right-4 z-50 flex flex-col items-end gap-3">
-        <button
-          onClick={() => setShowJoinRequestsPanel((prev) => !prev)}
-          className="group inline-flex items-center gap-3 rounded-full border border-white/10 bg-slate-950/80 px-4 py-2.5 text-sm font-medium text-white shadow-xl backdrop-blur-md transition hover:bg-slate-900/90"
-        >
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/20 transition group-hover:bg-emerald-500/25">
-            <Bell className="h-4 w-4" />
-            {joinRequests.length > 0 && (
+      {joinRequests.length > 0 && (
+        <div className="absolute top-20 right-4 z-50 flex flex-col items-end gap-3">
+          <button
+            onClick={() => setShowJoinRequestsPanel((prev) => !prev)}
+            className="group inline-flex items-center gap-3 rounded-full border border-white/10 bg-slate-950/80 px-4 py-2.5 text-sm font-medium text-white shadow-xl backdrop-blur-md transition hover:bg-slate-900/90"
+          >
+            <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/20 transition group-hover:bg-emerald-500/25">
+              <Bell className="h-4 w-4" />
               <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-emerald-400 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-slate-950 shadow-sm">
                 {joinRequests.length}
               </span>
-            )}
-          </span>
-          <span className="flex items-center gap-2">
-            Join requests
-            <ChevronDown
-              className={`h-4 w-4 transition-transform ${showJoinRequestsPanel ? "rotate-180" : ""}`}
-            />
-          </span>
-        </button>
+            </span>
+            <span className="flex items-center gap-2">
+              Join requests
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${showJoinRequestsPanel ? "rotate-180" : ""}`}
+              />
+            </span>
+          </button>
 
-        <AnimatePresence>
-          {showJoinRequestsPanel && (
-            <motion.div
-              initial={{ opacity: 0, y: -12, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -12, scale: 0.98 }}
-              transition={{ duration: 0.18 }}
-              className="w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-xl"
-            >
-              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-                <div>
-                  <p className="text-sm font-semibold text-white">
-                    Pending join requests
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    Review who can enter the room.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowJoinRequestsPanel(false)}
-                  className="rounded-full p-2 text-slate-400 transition hover:bg-white/5 hover:text-white"
-                  aria-label="Close join requests panel"
-                >
-                  <ChevronDown className="h-4 w-4 rotate-90" />
-                </button>
-              </div>
-
-              <div className="max-h-[28rem] space-y-3 overflow-y-auto p-3">
-                {joinRequests.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-8 text-center">
-                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-300">
-                      <UserCheck className="h-5 w-5" />
-                    </div>
-                    <p className="text-sm font-medium text-white">
-                      No pending requests
+          <AnimatePresence>
+            {showJoinRequestsPanel && (
+              <motion.div
+                initial={{ opacity: 0, y: -12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -12, scale: 0.98 }}
+                transition={{ duration: 0.18 }}
+                className="w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-xl"
+              >
+                <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      Pending join requests
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      New requests will appear here when someone asks to join.
+                    <p className="text-xs text-slate-400">
+                      Review who can enter the room.
                     </p>
                   </div>
-                ) : (
-                  joinRequests.map((req, index) => {
+                  <button
+                    onClick={() => setShowJoinRequestsPanel(false)}
+                    className="rounded-full p-2 text-slate-400 transition hover:bg-white/5 hover:text-white"
+                    aria-label="Close join requests panel"
+                  >
+                    <ChevronDown className="h-4 w-4 rotate-90" />
+                  </button>
+                </div>
+
+                <div className="max-h-[28rem] space-y-3 overflow-y-auto p-3">
+                  {joinRequests.map((req, index) => {
                     const participantName = req.participant?.name || req.userId;
                     const participantId = req.participant?.id || req.userId;
 
@@ -543,13 +528,13 @@ export const MeetingRoom: React.FC = () => {
                         </div>
                       </div>
                     );
-                  })
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       <AnimatePresence>
         {showJoinPopup && (
