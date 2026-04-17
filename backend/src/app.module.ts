@@ -9,6 +9,7 @@ import { RoomModule } from './room/room.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { LivekitModule } from './livekit/livekit.module';
+import { MeetingService } from './meeting/meeting.service';
 
 @Module({
   imports: [
@@ -23,6 +24,6 @@ import { LivekitModule } from './livekit/livekit.module';
     LivekitModule,
   ],
   controllers: [AppController],
-  providers: [AppService, MeetingGateway],
+  providers: [AppService, MeetingGateway, MeetingService],
 })
 export class AppModule {}

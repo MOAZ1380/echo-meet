@@ -6,8 +6,8 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { RoomService } from '../room/room.service';
 import { OnModuleInit } from '@nestjs/common';
+import { MeetingService } from './meeting.service';
 
 @WebSocketGateway(8000, {
   cors: { origin: '*' },
@@ -19,7 +19,7 @@ export class MeetingGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly roomService: RoomService) {}
+  constructor(private readonly meetingService: MeetingService) {}
 
   /**
    * Runs once after gateway initialization.
@@ -37,8 +37,10 @@ export class MeetingGateway implements OnModuleInit {
    * @param client Current socket client.
    */
   handleConnection(client: Socket) {
-    const userId = client.handshake.query.userId as string;
-    const participantId = client.handshake.query.participantId as string;
+    const { userId, participantId } =
+      this.meetingService.resolvePrivateChannelIds(
+        client.handshake.query as Record<string, unknown>,
+      );
 
     if (userId) {
       client.join(userId);
@@ -76,20 +78,13 @@ export class MeetingGateway implements OnModuleInit {
       participantId: string;
     },
   ) {
-    console.log('🔥 requestJoin called', data);
-    const participant = await this.roomService.requestJoin(
-      data.roomId,
-      data.name,
-      data.participantId,
-    );
-
-    const room = await this.roomService.findOne(data.roomId);
+    const requestData = await this.meetingService.requestJoin(data);
 
     // return id if user is guest (no userId), otherwise return userId
-    this.server.to(room.ownerId).emit('room:join-request', {
-      roomId: data.roomId,
-      participantId: data.participantId,
-      participant,
+    this.server.to(requestData.ownerId).emit('room:join-request', {
+      roomId: requestData.roomId,
+      participantId: requestData.participantId,
+      participant: requestData.participant,
     });
 
     return { success: true };
@@ -113,21 +108,16 @@ export class MeetingGateway implements OnModuleInit {
       ownerId: string;
     },
   ) {
-    console.log('🔥 approveUser called', data);
-    await this.roomService.approveUser(
-      data.roomId,
-      data.participantId,
-      data.ownerId,
-    );
+    const approvedData = await this.meetingService.approveUser(data);
 
-    this.server.to(data.participantId).emit('room:approved', {
-      roomId: data.roomId,
-      participantId: data.participantId,
+    this.server.to(approvedData.participantId).emit('room:approved', {
+      roomId: approvedData.roomId,
+      participantId: approvedData.participantId,
     });
 
-    this.server.to(data.ownerId).emit('room:approved', {
-      roomId: data.roomId,
-      participantId: data.participantId,
+    this.server.to(approvedData.ownerId).emit('room:approved', {
+      roomId: approvedData.roomId,
+      participantId: approvedData.participantId,
     });
 
     return { success: true };
@@ -151,17 +141,12 @@ export class MeetingGateway implements OnModuleInit {
       ownerId: string;
     },
   ) {
-    console.log('🔥 rejectUser called', data);
-    await this.roomService.rejectUser(
-      data.roomId,
-      data.participantId,
-      data.ownerId,
-    );
+    const rejectedData = await this.meetingService.rejectUser(data);
 
-    this.server.to(data.participantId).emit('room:rejected', {
-      roomId: data.roomId,
-      participantId: data.participantId,
-      reason: 'غير مسموح لك بالانضمام إلى هذه الغرفة.',
+    this.server.to(rejectedData.participantId).emit('room:rejected', {
+      roomId: rejectedData.roomId,
+      participantId: rejectedData.participantId,
+      reason: 'Your request to join the room was rejected by the owner.',
     });
 
     return { success: true };
@@ -182,30 +167,25 @@ export class MeetingGateway implements OnModuleInit {
     @MessageBody() data: { roomId: string; participantId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    const room = await this.roomService.findOne(data.roomId);
+    let joinData: { roomId: string; participantId: string } | null = null;
 
-    if (!room) {
+    try {
+      joinData = await this.meetingService.validateJoinRoom(
+        data.roomId,
+        data.participantId,
+      );
+    } catch {
       return client.emit('error', { message: 'Room not found' });
     }
 
-    const participant = await this.roomService[
-      'prisma'
-    ].roomParticipant.findFirst({
-      where: {
-        roomId: room.id,
-        id: data.participantId,
-        status: 'approved',
-      },
-    });
-
-    if (!participant) {
+    if (!joinData) {
       return client.emit('error', { message: 'Not approved yet' });
     }
 
-    client.join(room.id);
+    client.join(joinData.roomId);
 
-    this.server.to(room.id).emit('userJoined', {
-      participantId: data.participantId,
+    this.server.to(joinData.roomId).emit('userJoined', {
+      participantId: joinData.participantId,
     });
 
     return { success: true };

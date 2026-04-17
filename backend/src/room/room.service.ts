@@ -176,7 +176,6 @@ export class RoomService {
    * @returns Newly created pending participant record.
    */
   async requestJoin(roomId: string, name: string, participantId: string) {
-    console.log('🔥 requestJoin called', { roomId, name, participantId });
     const room = await this.findRoomByCodeOrId(roomId);
 
     if (!room) {
