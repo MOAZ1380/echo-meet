@@ -60,27 +60,3 @@ npm run dev
 ```bash
 npm run build
 ```
-
-## Screenshots Placeholder
-
-Put frontend images in `docs/images/frontend/`.
-
-### Home Page
-
-![Home Page](../docs/images/frontend/home.png)
-
-### Login / Register
-
-![Auth Pages](../docs/images/frontend/auth.png)
-
-### Lobby
-
-![Lobby](../docs/images/frontend/lobby.png)
-
-### Meeting Room
-
-![Meeting Room](../docs/images/frontend/meeting-room.png)
-
-### Chat and Participants Panel
-
-![Chat and Participants](../docs/images/frontend/chat-participants.png)

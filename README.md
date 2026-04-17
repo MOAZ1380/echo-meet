@@ -83,7 +83,9 @@ npm run dev
 
 ## Screenshots
 
-Add your screenshots under `docs/images/` (or any folder you prefer), then replace the paths below.
+### Login
+
+![Login Screenshot](docs/images/login.png)
 
 ### Home
 
@@ -95,11 +97,20 @@ Add your screenshots under `docs/images/` (or any folder you prefer), then repla
 
 ### Meeting Room
 
-![Meeting Room Screenshot](docs/images/meeting-room.png)
+![Meeting Room Screenshot](docs/images/meeting.png)
+![Meeting Room Screenshot](docs/images/camera.jpg)
 
-### Join Requests / Participants
+### Grid View
 
-![Participants Screenshot](docs/images/participants.png)
+![Grid View Screenshot](docs/images/grid.png)
+
+### Chat & Communication
+
+![Chat Screenshot](docs/images/chat.png)
+
+### Participants
+
+![Participants Screenshot](docs/images/people.png)
 
 ## More Details
 

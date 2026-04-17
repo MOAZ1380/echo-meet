@@ -101,19 +101,3 @@ Gateway runs on `http://localhost:8000` by default.
 
 - Client -> Server: `requestJoin`, `approveUser`, `rejectUser`, `joinRoom`
 - Server -> Client: `room:join-request`, `room:approved`, `room:rejected`, `userJoined`
-
-## Screenshots Placeholder
-
-Put backend-related images in `docs/images/backend/`.
-
-### Architecture / Modules
-
-![Backend Architecture](../docs/images/backend/architecture.png)
-
-### Prisma ERD
-
-![Prisma ERD](../docs/images/backend/prisma-erd.png)
-
-### API Testing (Postman/Insomnia)
-
-![API Testing](../docs/images/backend/api-testing.png)
