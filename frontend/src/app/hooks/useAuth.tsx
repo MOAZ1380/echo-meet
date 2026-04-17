@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  googleLogin as googleLoginApi,
   login as loginApi,
   register as registerApi,
   requestPasswordReset as requestPasswordResetApi,
@@ -23,6 +24,7 @@ import type {
   AuthResponse,
   AuthUser,
   LoginPayload,
+  GoogleLoginPayload,
   RegisterPayload,
   RequestResetPayload,
   ResetPasswordPayload,
@@ -35,6 +37,7 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   register: (payload: RegisterPayload) => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
+  googleLogin: (payload: GoogleLoginPayload) => Promise<void>;
   requestPasswordReset: (payload: RequestResetPayload) => Promise<string>;
   verifyPasswordResetOtp: (
     token: string,
@@ -117,6 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuth(auth);
   }
 
+  // Log in with a verified Google credential.
+  async function googleLogin(payload: GoogleLoginPayload) {
+    const auth = await googleLoginApi(payload);
+    setAuth(auth);
+  }
+
   // Start the password-reset flow and cache the temporary reset token.
   async function requestPasswordReset(payload: RequestResetPayload) {
     const result = await requestPasswordResetApi(payload);
@@ -165,13 +174,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: Boolean(token && user?.id),
       register,
       login,
+      googleLogin,
       requestPasswordReset,
       verifyPasswordResetOtp,
       resetPassword,
       logout,
       getResetToken,
     }),
-    [token, user, resetToken],
+    [token, user, resetToken, googleLogin],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

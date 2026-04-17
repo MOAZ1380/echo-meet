@@ -1,5 +1,6 @@
 import { apiRequest, authHeaders } from "./client";
 import type {
+  GoogleLoginPayload,
   LoginPayload,
   RegisterPayload,
   RequestResetPayload,
@@ -23,6 +24,16 @@ export function register(payload: RegisterPayload) {
  */
 export function login(payload: LoginPayload) {
   return apiRequest<AuthResponse>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Exchanges a Google ID token for an application session.
+ */
+export function googleLogin(payload: GoogleLoginPayload) {
+  return apiRequest<AuthResponse>("/auth/google", {
     method: "POST",
     body: JSON.stringify(payload),
   });

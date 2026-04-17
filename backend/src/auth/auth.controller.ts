@@ -1,6 +1,7 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -25,6 +26,14 @@ export class AuthController {
   @Post('login')
   login(@Body() data: LoginDto) {
     return this.authService.login(data);
+  }
+
+  /**
+   * Authenticates a Google credential and returns an app session.
+   */
+  @Post('google')
+  googleLogin(@Body() data: GoogleLoginDto) {
+    return this.authService.googleLogin(data);
   }
 
   /**

@@ -20,6 +20,10 @@ export type LoginPayload = {
   password: string;
 };
 
+export type GoogleLoginPayload = {
+  credential: string;
+};
+
 export type RequestResetPayload = {
   email: string;
 };

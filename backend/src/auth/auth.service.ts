@@ -5,10 +5,11 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { randomInt } from 'crypto';
+import { randomBytes, randomInt } from 'crypto';
 import { EmailService } from '../email/email.service';
 import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -23,6 +24,50 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
   ) {}
+
+  /**
+   * Extracts and validates Google profile data from an ID token.
+   */
+  private async verifyGoogleCredential(credential: string) {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+
+    if (!clientId) {
+      throw new BadRequestException('Google login is not configured');
+    }
+
+    const response = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`,
+    );
+
+    if (!response.ok) {
+      throw new UnauthorizedException('Invalid Google credential');
+    }
+
+    const profile = (await response.json()) as {
+      aud?: string;
+      email?: string;
+      email_verified?: string | boolean;
+      name?: string;
+      sub?: string;
+    };
+
+    if (profile.aud !== clientId) {
+      throw new UnauthorizedException('Invalid Google credential');
+    }
+
+    const emailVerified =
+      profile.email_verified === true || profile.email_verified === 'true';
+
+    if (!profile.email || !emailVerified) {
+      throw new UnauthorizedException('Google email is not verified');
+    }
+
+    return {
+      email: profile.email,
+      name: profile.name?.trim() || profile.email.split('@')[0],
+      googleId: profile.sub ?? '',
+    };
+  }
 
   /**
    * Builds a signed JWT for the given user identity.
@@ -69,6 +114,34 @@ export class AuthService {
     const user = await this.userService.create(data);
     return this.buildAuthResponse(
       user as { id: string; email: string; name?: string | null },
+    );
+  }
+
+  /**
+   * Logs in or creates a user using a verified Google ID token.
+   */
+  async googleLogin(data: GoogleLoginDto) {
+    const googleProfile = await this.verifyGoogleCredential(data.credential);
+
+    const existingUser = await this.userService.findByEmail(
+      googleProfile.email,
+    );
+
+    if (existingUser) {
+      return this.buildAuthResponse(
+        existingUser as { id: string; email: string; name?: string | null },
+      );
+    }
+
+    const randomPassword = randomBytes(32).toString('hex');
+    const createdUser = await this.userService.create({
+      email: googleProfile.email,
+      name: googleProfile.name,
+      password: randomPassword,
+    });
+
+    return this.buildAuthResponse(
+      createdUser as { id: string; email: string; name?: string | null },
     );
   }
 
