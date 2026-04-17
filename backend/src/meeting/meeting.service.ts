@@ -21,13 +21,24 @@ export class MeetingService {
     private readonly prisma: PrismaService,
   ) {}
 
-  // Normalize socket query values that can be string|string[]|undefined.
+  /**
+   * Normalizes handshake query values that may be `string`, `string[]`, or missing.
+   *
+   * @param value Raw query value from socket handshake.
+   * @returns Single string value when available, otherwise `undefined`.
+   */
   private asQueryString(value: unknown) {
     if (typeof value === 'string') return value;
     if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
     return undefined;
   }
 
+  /**
+   * Extracts private channel ids used for direct socket notifications.
+   *
+   * @param query Socket handshake query object.
+   * @returns User and participant channel ids when present.
+   */
   resolvePrivateChannelIds(query: Record<string, unknown>) {
     const userId = this.asQueryString(query.userId);
     const participantId = this.asQueryString(query.participantId);
@@ -35,6 +46,12 @@ export class MeetingService {
     return { userId, participantId };
   }
 
+  /**
+   * Creates or updates a pending join request and returns owner routing info.
+   *
+   * @param data Join request payload.
+   * @returns Join request metadata used by the gateway emit layer.
+   */
   async requestJoin(data: RequestJoinPayload) {
     const participant = await this.roomService.requestJoin(
       data.roomId,
@@ -52,6 +69,12 @@ export class MeetingService {
     };
   }
 
+  /**
+   * Approves a participant for the requested room.
+   *
+   * @param data Decision payload containing room, owner, and participant ids.
+   * @returns Minimal approved payload for gateway broadcasts.
+   */
   async approveUser(data: RoomDecisionPayload) {
     await this.roomService.approveUser(
       data.roomId,
@@ -66,6 +89,12 @@ export class MeetingService {
     };
   }
 
+  /**
+   * Rejects a participant for the requested room.
+   *
+   * @param data Decision payload containing room, owner, and participant ids.
+   * @returns Minimal rejected payload for gateway broadcasts.
+   */
   async rejectUser(data: RoomDecisionPayload) {
     await this.roomService.rejectUser(
       data.roomId,
@@ -79,6 +108,13 @@ export class MeetingService {
     };
   }
 
+  /**
+   * Validates that a participant exists in the room with `approved` status.
+   *
+   * @param roomId External room reference (id or code).
+   * @param participantId Participant id attempting to join.
+   * @returns Normalized room join data or `null` when participant is not approved.
+   */
   async validateJoinRoom(roomId: string, participantId: string) {
     const room = await this.roomService.findOne(roomId);
 

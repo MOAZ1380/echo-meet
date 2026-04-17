@@ -35,6 +35,9 @@ type SocketErrorEvent = {
 
 const USER_COOKIE_KEY = "echo_user";
 
+/**
+ * Reads the authenticated user id from persistence, when available.
+ */
 function getCurrentUserId() {
   const user = getJsonCookie<StoredUser>(USER_COOKIE_KEY);
   return user?.id ?? undefined;
@@ -92,7 +95,6 @@ export function useRoomChat() {
       });
     }
     function onRejected(data: RoomDecisionEvent) {
-      console.log("❌ rejected event received", data);
       setLastRejectedRoomId(data.roomId);
       setLastRejectedReason(
         data.reason ?? "غير مسموح لك بالانضمام إلى هذه الغرفة.",
@@ -153,7 +155,12 @@ export function useRoomChat() {
     };
   }, [joinedRoomId]);
 
-  // Join the legacy socket room channel.
+  /**
+   * Joins the socket room channel after resolving participant identity.
+   *
+   * @param roomId Room code or id used in socket channel routing.
+   * @param participantId Participant id to validate on server side.
+   */
   function joinRoom(roomId: string, participantId: string) {
     const resolvedParticipantId = participantId?.trim() || getCurrentUserId();
 
@@ -163,7 +170,13 @@ export function useRoomChat() {
     socket.emit("joinRoom", { roomId, participantId: resolvedParticipantId });
   }
 
-  // Emit join request for a specific room.
+  /**
+   * Sends a join request to the room owner moderation queue.
+   *
+   * @param roomId Target room reference.
+   * @param name Display name shown in pending request list.
+   * @param participantId Persistent participant identity.
+   */
   async function requestJoin(
     roomId: string,
     name: string,
@@ -171,7 +184,6 @@ export function useRoomChat() {
   ) {
     const resolvedParticipantId = participantId.trim();
     syncSocketIdentity(resolvedParticipantId);
-    console.log("🚀 requesting join", roomId, name, resolvedParticipantId);
     socket.emit("requestJoin", {
       roomId,
       name,
@@ -179,13 +191,18 @@ export function useRoomChat() {
     });
   }
 
-  // Owner emits approve action for a pending user.
+  /**
+   * Approves a pending participant and emits owner decision to server.
+   *
+   * @param roomId Target room reference.
+   * @param participantId Pending participant id.
+   * @param ownerId Optional owner id override.
+   */
   function approveUser(
     roomId: string,
     participantId: string,
     ownerId?: string,
   ) {
-    console.log("✅ approving user", roomId, participantId, ownerId);
     const resolvedOwnerId = ownerId || getCurrentUserId();
 
     if (!resolvedOwnerId) {
@@ -207,7 +224,13 @@ export function useRoomChat() {
     });
   }
 
-  // Owner emits reject action for a pending user.
+  /**
+   * Rejects a pending participant and emits owner decision to server.
+   *
+   * @param roomId Target room reference.
+   * @param participantId Pending participant id.
+   * @param ownerId Optional owner id override.
+   */
   function rejectUser(roomId: string, participantId: string, ownerId?: string) {
     const resolvedOwnerId = ownerId || getCurrentUserId();
 
@@ -232,7 +255,11 @@ export function useRoomChat() {
     });
   }
 
-  // Send a text message through the socket room channel.
+  /**
+   * Emits a chat message to the currently joined socket room.
+   *
+   * @param message Text message body.
+   */
   function sendMessage(message: string) {
     if (!joinedRoomId || !message.trim()) return;
 

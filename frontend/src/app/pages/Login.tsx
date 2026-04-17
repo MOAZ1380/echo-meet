@@ -17,6 +17,9 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  /**
+   * Validates credentials and signs in the current user.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -52,9 +55,11 @@ export const Login: React.FC = () => {
     }
   };
 
+  /**
+   * Placeholder trigger for future Google OAuth login flow.
+   */
   const handleGoogleLogin = () => {
     // TODO: Connect to your Google OAuth backend
-    console.log("Google login clicked");
   };
 
   return (

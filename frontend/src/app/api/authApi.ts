@@ -8,6 +8,9 @@ import type {
   AuthResponse,
 } from "../types/auth";
 
+/**
+ * Registers a new user account.
+ */
 export function register(payload: RegisterPayload) {
   return apiRequest<AuthResponse>("/auth/register", {
     method: "POST",
@@ -15,6 +18,9 @@ export function register(payload: RegisterPayload) {
   });
 }
 
+/**
+ * Logs in an existing user and returns auth payload.
+ */
 export function login(payload: LoginPayload) {
   return apiRequest<AuthResponse>("/auth/login", {
     method: "POST",
@@ -22,6 +28,9 @@ export function login(payload: LoginPayload) {
   });
 }
 
+/**
+ * Requests password reset and sends OTP to user email.
+ */
 export function requestPasswordReset(payload: RequestResetPayload) {
   return apiRequest<{ message: string; resetToken: string }>(
     "/auth/request-password-reset",
@@ -32,6 +41,9 @@ export function requestPasswordReset(payload: RequestResetPayload) {
   );
 }
 
+/**
+ * Verifies submitted OTP and returns a short-lived reset token.
+ */
 export function verifyPasswordResetOtp(
   token: string,
   payload: VerifyResetOtpPayload,
@@ -46,6 +58,9 @@ export function verifyPasswordResetOtp(
   );
 }
 
+/**
+ * Resets user password using a valid reset token.
+ */
 export function resetPassword(token: string, payload: ResetPasswordPayload) {
   return apiRequest<{ message: string; resetToken: string }>(
     "/auth/reset-password",

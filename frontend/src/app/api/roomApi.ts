@@ -35,6 +35,9 @@ export type {
   UserJoinedEvent,
 } from "../types/room";
 
+/**
+ * Fetches all rooms visible to the authenticated user.
+ */
 export function getRooms(token: string) {
   return apiRequest<Room[]>("/rooms", {
     method: "GET",
@@ -42,6 +45,9 @@ export function getRooms(token: string) {
   });
 }
 
+/**
+ * Creates a new room owned by the authenticated user.
+ */
 export function createRoom(token: string) {
   return apiRequest<Room>("/rooms", {
     method: "POST",
@@ -49,12 +55,18 @@ export function createRoom(token: string) {
   });
 }
 
+/**
+ * Fetches one room by id or public code.
+ */
 export function getRoomById(roomId: string) {
   return apiRequest<Room>(`/rooms/${roomId}`, {
     method: "GET",
   });
 }
 
+/**
+ * Updates mutable room attributes.
+ */
 export function updateRoom(
   token: string,
   roomId: string,
@@ -67,6 +79,9 @@ export function updateRoom(
   });
 }
 
+/**
+ * Deletes a room owned by the authenticated user.
+ */
 export function deleteRoom(token: string, roomId: string) {
   return apiRequest<Room>(`/rooms/${roomId}`, {
     method: "DELETE",
@@ -74,6 +89,9 @@ export function deleteRoom(token: string, roomId: string) {
   });
 }
 
+/**
+ * Sends a join request for authenticated participants.
+ */
 export function requestJoinRoom(token: string, roomId: string, name: string) {
   return apiRequest<RoomParticipant>(`/rooms/${roomId}/join`, {
     method: "POST",
@@ -82,6 +100,9 @@ export function requestJoinRoom(token: string, roomId: string, name: string) {
   });
 }
 
+/**
+ * Sends a join request for guest participants.
+ */
 export function requestGuestJoinRoom(
   roomId: string,
   token: undefined,
@@ -93,6 +114,9 @@ export function requestGuestJoinRoom(
   });
 }
 
+/**
+ * Returns all pending room join requests (owner only).
+ */
 export function getPendingUsers(token: string, roomId: string) {
   return apiRequest<RoomParticipant[]>(`/rooms/${roomId}/pending`, {
     method: "GET",
@@ -100,6 +124,9 @@ export function getPendingUsers(token: string, roomId: string) {
   });
 }
 
+/**
+ * Approves one pending room participant (owner only).
+ */
 export function approveUser(token: string, roomId: string, userId: string) {
   return apiRequest<RoomParticipant>(`/rooms/${roomId}/approve/${userId}`, {
     method: "PATCH",
@@ -107,6 +134,9 @@ export function approveUser(token: string, roomId: string, userId: string) {
   });
 }
 
+/**
+ * Rejects one pending room participant (owner only).
+ */
 export function rejectUser(token: string, roomId: string, userId: string) {
   return apiRequest<RoomParticipant>(`/rooms/${roomId}/reject/${userId}`, {
     method: "PATCH",
@@ -114,6 +144,9 @@ export function rejectUser(token: string, roomId: string, userId: string) {
   });
 }
 
+/**
+ * Requests a room-scoped access token for live session join.
+ */
 export function getRoomToken(token: string, roomId: string) {
   return apiRequest<string>(`/rooms/${roomId}/token`, {
     method: "GET",

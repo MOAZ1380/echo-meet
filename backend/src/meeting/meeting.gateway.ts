@@ -24,9 +24,7 @@ export class MeetingGateway implements OnModuleInit {
   /**
    * Runs once after gateway initialization.
    */
-  onModuleInit() {
-    console.log('[Socket] Gateway ready on :8000');
-  }
+  onModuleInit() {}
 
   /**
    * Handles a newly connected socket.
@@ -56,9 +54,7 @@ export class MeetingGateway implements OnModuleInit {
    *
    * @param client Current socket client.
    */
-  handleDisconnect(client: Socket) {
-    console.log(`[Socket] Disconnected: ${client.id}`);
-  }
+  handleDisconnect(client: Socket) {}
 
   /**
    * Event: requestJoin

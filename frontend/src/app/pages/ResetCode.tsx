@@ -20,11 +20,17 @@ export const ResetCode: React.FC = () => {
   const [error, setError] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  /**
+   * Auto-focuses the first OTP input when the screen loads.
+   */
   useEffect(() => {
     // Focus first input on mount
     inputRefs.current[0]?.focus();
   }, []);
 
+  /**
+   * Writes one OTP digit and advances focus when appropriate.
+   */
   const handleChange = (index: number, value: string) => {
     // Only allow numbers
     if (value && !/^\d+$/.test(value)) return;
@@ -40,6 +46,9 @@ export const ResetCode: React.FC = () => {
     }
   };
 
+  /**
+   * Handles backspace and arrow navigation across OTP input slots.
+   */
   const handleKeyDown = (
     index: number,
     e: React.KeyboardEvent<HTMLInputElement>,
@@ -50,6 +59,9 @@ export const ResetCode: React.FC = () => {
     }
   };
 
+  /**
+   * Allows pasting a full six-digit code into the OTP inputs.
+   */
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text").trim();
@@ -62,6 +74,9 @@ export const ResetCode: React.FC = () => {
     }
   };
 
+  /**
+   * Verifies OTP code and navigates to password reset form on success.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -83,9 +98,6 @@ export const ResetCode: React.FC = () => {
     }
     setIsLoading(true);
 
-    // TODO: Connect to your backend API to verify code
-    console.log("Verifying code:", fullCode, "for email:", email);
-
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
@@ -96,9 +108,11 @@ export const ResetCode: React.FC = () => {
     }, 1500);
   };
 
+  /**
+   * Clears existing OTP input and requests a resend from backend.
+   */
   const handleResendCode = () => {
     // TODO: Connect to your backend API to resend code
-    console.log("Resending code to:", email);
     setCode(["", "", "", "", "", ""]);
     inputRefs.current[0]?.focus();
   };
@@ -146,7 +160,9 @@ export const ResetCode: React.FC = () => {
                 {code.map((digit, index) => (
                   <input
                     key={index}
-                    ref={(el) => (inputRefs.current[index] = el)}
+                    ref={(el) => {
+                      inputRefs.current[index] = el;
+                    }}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}

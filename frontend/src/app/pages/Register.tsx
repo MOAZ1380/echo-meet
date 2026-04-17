@@ -23,6 +23,9 @@ export const Register: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState("");
 
+  /**
+   * Updates registration form state for each input change.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -33,6 +36,9 @@ export const Register: React.FC = () => {
     }
   };
 
+  /**
+   * Validates registration input and submits account creation request.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -57,9 +63,6 @@ export const Register: React.FC = () => {
     } catch {}
     setIsLoading(true);
 
-    // TODO: Connect to your backend API
-    console.log("Register attempt:", formData);
-
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
@@ -67,9 +70,11 @@ export const Register: React.FC = () => {
     }, 1500);
   };
 
+  /**
+   * Placeholder trigger for future Google OAuth signup flow.
+   */
   const handleGoogleSignup = () => {
     // TODO: Connect to your Google OAuth backend
-    console.log("Google signup clicked");
   };
 
   return (

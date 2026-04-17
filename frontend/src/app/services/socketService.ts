@@ -12,6 +12,12 @@ export const socket = io(socketUrl, {
   },
 });
 
+/**
+ * Synchronizes socket handshake identity so server-side private emits can
+ * target either authenticated users or guest participants.
+ *
+ * @param participantId Optional participant id override for guest flows.
+ */
 export function syncSocketIdentity(participantId?: string) {
   const currentUser = getJsonCookie<{ id?: string }>("echo_user");
   const userId = currentUser?.id?.trim() || undefined;

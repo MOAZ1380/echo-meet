@@ -135,12 +135,6 @@ export const Lobby: React.FC = () => {
     if (!meetingId || isWaiting || !participantId) return;
 
     const finalName = userName.trim() || user?.name || "Anonymous";
-    console.log(
-      "🚪 Requesting to join meeting with name:",
-      finalName,
-      participantId,
-      meetingId,
-    );
 
     setRejectionMessage("");
     setIsWaiting(true);

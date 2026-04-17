@@ -1,4 +1,10 @@
-export const API_BASE = `${import.meta.env.VITE_API_URL}`;
+type EnvImportMeta = ImportMeta & {
+  env: {
+    VITE_API_URL?: string;
+  };
+};
+
+export const API_BASE = `${(import.meta as EnvImportMeta).env.VITE_API_URL ?? ""}`;
 
 export class ApiError extends Error {
   status: number;
@@ -9,6 +15,13 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Executes an HTTP request against backend API and normalizes errors.
+ *
+ * @param path API path relative to configured base url.
+ * @param options Fetch options object.
+ * @returns Parsed JSON response typed as `T`.
+ */
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
@@ -43,6 +56,12 @@ export async function apiRequest<T>(
   return (await response.json()) as T;
 }
 
+/**
+ * Builds authorization headers for bearer token protected endpoints.
+ *
+ * @param token JWT access token.
+ * @returns Headers object containing `Authorization` header.
+ */
 export function authHeaders(token: string): HeadersInit {
   return {
     Authorization: `Bearer ${token}`,

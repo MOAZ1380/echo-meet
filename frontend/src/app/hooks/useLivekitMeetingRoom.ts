@@ -190,7 +190,6 @@ export function useMeetingRoom(displayName: string) {
       room
         .on(RoomEvent.Connected, () => {
           setSocketStatus("connected");
-          console.log("Connected to LiveKit room:", room.name);
           syncParticipantState();
         })
         .on(RoomEvent.Disconnected, () => {

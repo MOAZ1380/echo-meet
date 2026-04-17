@@ -8,6 +8,9 @@ type CookieOptions = {
   maxAgeSeconds?: number;
 };
 
+/**
+ * Converts cookie option object into a valid cookie attribute suffix.
+ */
 function buildCookieOptions(options: CookieOptions = {}) {
   const path = options.path ?? "/";
   const sameSite = options.sameSite ?? "Lax";
@@ -31,6 +34,9 @@ function buildCookieOptions(options: CookieOptions = {}) {
   return suffix;
 }
 
+/**
+ * Sets a plain cookie value.
+ */
 export function setCookie(
   name: string,
   value: string,
@@ -41,6 +47,9 @@ export function setCookie(
   document.cookie = `${encodedName}=${encodedValue}${buildCookieOptions(options)}`;
 }
 
+/**
+ * Reads a plain cookie value by name.
+ */
 export function getCookie(name: string) {
   const encodedName = `${encodeURIComponent(name)}=`;
   const cookies = document.cookie ? document.cookie.split(";") : [];
@@ -55,11 +64,17 @@ export function getCookie(name: string) {
   return null;
 }
 
+/**
+ * Deletes a cookie by expiring it immediately.
+ */
 export function deleteCookie(name: string, path = "/") {
   const encodedName = encodeURIComponent(name);
   document.cookie = `${encodedName}=; Path=${path}; Max-Age=0; SameSite=Lax`;
 }
 
+/**
+ * Serializes and stores JSON data in a cookie.
+ */
 export function setJsonCookie<T>(
   name: string,
   value: T,
@@ -68,6 +83,9 @@ export function setJsonCookie<T>(
   setCookie(name, JSON.stringify(value), options);
 }
 
+/**
+ * Reads and parses JSON value from a cookie.
+ */
 export function getJsonCookie<T>(name: string): T | null {
   const raw = getCookie(name);
 
