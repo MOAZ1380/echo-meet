@@ -175,50 +175,28 @@ export class RoomService {
    * @param name Optional name for the participant (used for guests or can override user name).
    * @returns Newly created pending participant record.
    */
-  async requestJoin(roomId: string, name?: string, userId?: string) {
+  async requestJoin(roomId: string, name: string, participantId: string) {
+    console.log('🔥 requestJoin called', { roomId, name, participantId });
     const room = await this.findRoomByCodeOrId(roomId);
 
     if (!room) {
       throw new NotFoundException('Room not found');
     }
-    console.log('🔥 requestJoin', { roomId, name, userId });
-    if (userId) {
-      // registered user
-      console.log('🔥 requestJoin for registered user', {
-        roomId,
-        name,
-        userId,
-      });
-      return this.prisma.roomParticipant.upsert({
-        where: {
-          roomId_userId: {
-            roomId: room.id,
-            userId,
-          },
-        },
-        update: {
-          name: name || 'User',
-          status: 'pending',
-        },
-        create: {
-          roomId: room.id,
-          name: name || 'User',
-          userId,
-        },
-      });
-    } else {
-      // guest
-      console.log('🔥 requestJoin for guest', { roomId, name });
 
-      return this.prisma.roomParticipant.create({
-        data: {
-          roomId: room.id,
-          name: name || `Guest-${Date.now()}`,
-          userId: null,
-          status: 'pending',
-        },
-      });
-    }
+    return this.prisma.roomParticipant.upsert({
+      where: { id: participantId },
+      update: {
+        roomId: room.id,
+        name: name || `Guest-${Date.now()}`,
+        status: 'pending',
+      },
+      create: {
+        id: participantId,
+        roomId: room.id,
+        name: name || `Guest-${Date.now()}`,
+        status: 'pending',
+      },
+    });
   }
 
   /**
@@ -256,45 +234,31 @@ export class RoomService {
    * @throws BadRequestException If requester is not the room owner.
    * @returns Updated participant record with `approved` status.
    */
-  async approveUser(roomId: string, targetUserId: string, ownerId: string) {
+  async approveUser(roomId: string, participantId: string, ownerId: string) {
     const room = await this.findRoomByCodeOrId(roomId);
 
     if (!room || room.ownerId !== ownerId) {
       throw new BadRequestException('Not allowed');
     }
-    // if targetUserId is null, it means it's a guest participant, so we need to find the participant record by roomId and name instead of userId
-    if (!targetUserId) {
-      const participant = await this.prisma.roomParticipant.findFirst({
-        where: {
-          roomId: room.id,
-          id: targetUserId,
-          status: 'pending',
-        },
-      });
 
-      if (!participant) {
-        throw new NotFoundException('Participant not found');
-      }
+    const participant = await this.prisma.roomParticipant.findFirst({
+      where: {
+        roomId: room.id,
+        id: participantId,
+        status: 'pending',
+      },
+    });
 
-      return this.prisma.roomParticipant.update({
-        where: { id: participant.id },
-        data: {
-          status: 'approved',
-        },
-      });
-    } else {
-      return this.prisma.roomParticipant.update({
-        where: {
-          roomId_userId: {
-            roomId: room.id,
-            userId: targetUserId,
-          },
-        },
-        data: {
-          status: 'approved',
-        },
-      });
+    if (!participant) {
+      throw new NotFoundException('Participant not found');
     }
+
+    return this.prisma.roomParticipant.update({
+      where: { id: participant.id },
+      data: {
+        status: 'approved',
+      },
+    });
   }
 
   /**
@@ -306,7 +270,7 @@ export class RoomService {
    * @throws BadRequestException If requester is not the room owner.
    * @returns Updated participant record with `rejected` status.
    */
-  async rejectUser(roomId: string, targetUserId: string, ownerId: string) {
+  async rejectUser(roomId: string, participantId: string, ownerId: string) {
     const room = await this.findRoomByCodeOrId(roomId);
 
     if (!room || room.ownerId !== ownerId) {
@@ -314,12 +278,7 @@ export class RoomService {
     }
 
     return this.prisma.roomParticipant.update({
-      where: {
-        roomId_userId: {
-          roomId: room.id,
-          userId: targetUserId,
-        },
-      },
+      where: { id: participantId },
       data: {
         status: 'rejected',
       },

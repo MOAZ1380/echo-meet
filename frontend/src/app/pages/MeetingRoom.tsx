@@ -22,6 +22,7 @@ import type { Participant } from "../types/meeting";
 import { useMeetingRoom } from "../hooks/useLivekitMeetingRoom";
 import { useRoomChat } from "../hooks/useRoomChat";
 import { getJsonCookie } from "../utils/cookies";
+import { getCurrentParticipantId } from "../utils/participantId";
 
 /**
  * MeetingRoom Page Component
@@ -33,6 +34,7 @@ type SidebarType = "chat" | "participants" | null;
 // Data passed from the lobby through navigation state.
 type MeetingLocationState = {
   userName?: string;
+  participantId?: string;
   mediaPreferences?: {
     micOn?: boolean;
     cameraOn?: boolean;
@@ -47,10 +49,17 @@ export const MeetingRoom: React.FC = () => {
   const location = useLocation();
   const state = (location.state as MeetingLocationState | null) || null;
   const userName = state?.userName || "Guest";
+  const stateParticipantId = state?.participantId;
   const initialMicOn = !!state?.mediaPreferences?.micOn;
   const initialCameraOn = !!state?.mediaPreferences?.cameraOn;
   const hasInitializedMediaRef = useRef(false);
   const hasJoinedRoomRef = useRef(false);
+  const participantIdRef = useRef<string>("");
+
+  // Get current user (room owner) ID
+  const currentUser = useMemo(() => {
+    return getJsonCookie<{ id?: string }>("echo_user");
+  }, []);
 
   const [activeSidebar, setActiveSidebar] = useState<SidebarType>(null);
   const [meetingDuration, setMeetingDuration] = useState("00:00");
@@ -210,11 +219,14 @@ export const MeetingRoom: React.FC = () => {
     if (!meetingId) return;
 
     const user = getJsonCookie<{ id?: string }>("echo_user");
+    const finalParticipantId =
+      stateParticipantId || user?.id || getCurrentParticipantId();
 
-    if (!user?.id) return;
+    if (!finalParticipantId) return;
 
-    joinRoom(meetingId, user.id);
-  }, [meetingId]);
+    participantIdRef.current = finalParticipantId;
+    joinRoom(meetingId, finalParticipantId);
+  }, [meetingId, stateParticipantId]);
 
   // Toggle the active sidebar without leaving the meeting view.
   const handleToggleSidebar = (sidebar: SidebarType) => {
@@ -429,14 +441,18 @@ export const MeetingRoom: React.FC = () => {
 
               <div className="flex gap-2">
                 <button
-                  onClick={() => approveUser(req.roomId, req.userId)}
+                  onClick={() =>
+                    approveUser(req.roomId, req.participant.id, currentUser?.id)
+                  }
                   className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm"
                 >
                   Accept
                 </button>
 
                 <button
-                  onClick={() => rejectUser(req.roomId, req.userId)}
+                  onClick={() =>
+                    rejectUser(req.roomId, req.participant.id, currentUser?.id)
+                  }
                   className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
                 >
                   Reject

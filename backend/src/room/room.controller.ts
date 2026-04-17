@@ -95,33 +95,33 @@ export class RoomController {
     return this.roomService.remove(id, req.userId);
   }
 
-  /**
-   * Request to join a room.
-   *
-   * Creates a participant record with pending status.
-   * @param roomId Target room id.
-   * @param req Authenticated request containing `userId`.
-   * @returns Newly created pending participant record.
-   */
-  @Post(':id/join')
-  requestJoin(
-    @Param('id') roomId: string,
-    @Body('name') name: string,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    return this.roomService.requestJoin(roomId, name || 'Guest', req.userId);
-  }
+  // /**
+  //  * Request to join a room.
+  //  *
+  //  * Creates a participant record with pending status.
+  //  * @param roomId Target room id.
+  //  * @param req Authenticated request containing `userId`.
+  //  * @returns Newly created pending participant record.
+  //  */
+  // @Post(':id/join')
+  // requestJoin(
+  //   @Param('id') roomId: string,
+  //   @Body('name') name: string,
+  //   @Req() req: AuthenticatedRequest,
+  // ) {
+  //   return this.roomService.requestJoin(roomId, name || 'Guest', req.userId);
+  // }
 
-  /**
-   *
-   * @param roomId
-   * @param name
-   * @returns
-   */
-  @Post(':id/guest-join')
-  guestJoin(@Param('id') roomId: string, @Body('name') name: string) {
-    return this.roomService.requestJoin(roomId, name);
-  }
+  // /**
+  //  *
+  //  * @param roomId
+  //  * @param name
+  //  * @returns
+  //  */
+  // @Post(':id/requestJoin')
+  // guestJoin(@Param('id') roomId: string, @Body('name') name: string) {
+  //   return this.roomService.requestJoin(roomId, name, );
+  // }
 
   /**
    * Get users with pending join requests for a room.

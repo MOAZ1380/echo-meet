@@ -12,6 +12,7 @@ import {
 import { useMediaStream } from "../hooks/useMediaStream";
 import { useAuth } from "../hooks/useAuth";
 import { useRoomChat } from "../hooks/useRoomChat";
+import { getOrCreateParticipantId } from "../utils/participantId";
 
 /**
  * Lobby Page Component
@@ -22,6 +23,7 @@ export const Lobby: React.FC = () => {
   const { user } = useAuth();
   const [isWaiting, setIsWaiting] = useState(false);
   const [rejectionMessage, setRejectionMessage] = useState("");
+  const [participantId, setParticipantId] = useState("");
   const {
     requestJoin,
     lastApprovedRoomId,
@@ -33,6 +35,12 @@ export const Lobby: React.FC = () => {
   const [userName, setUserName] = useState(user?.name ?? "");
   const [hasRequestedMedia, setHasRequestedMedia] = useState(false);
   const isNameLocked = Boolean(user?.name?.trim());
+
+  // Initialize participantId for guest or use user id
+  useEffect(() => {
+    const id = user?.id || getOrCreateParticipantId();
+    setParticipantId(id);
+  }, [user?.id]);
   const {
     stream,
     isCameraOn,
@@ -95,6 +103,7 @@ export const Lobby: React.FC = () => {
       navigate(`/meeting/${meetingId}`, {
         state: {
           userName,
+          participantId,
           mediaPreferences: {
             micOn: isMicOn,
             cameraOn: isCameraOn,
@@ -102,7 +111,15 @@ export const Lobby: React.FC = () => {
         },
       });
     }
-  }, [isCameraOn, isMicOn, lastApprovedRoomId, meetingId, navigate, userName]);
+  }, [
+    isCameraOn,
+    isMicOn,
+    lastApprovedRoomId,
+    meetingId,
+    navigate,
+    userName,
+    participantId,
+  ]);
 
   useEffect(() => {
     if (lastRejectedRoomId === meetingId) {
@@ -115,18 +132,20 @@ export const Lobby: React.FC = () => {
   }, [lastRejectedReason, lastRejectedRoomId, meetingId]);
 
   const handleJoinMeeting = () => {
-    if (!meetingId || isWaiting) return;
+    if (!meetingId || isWaiting || !participantId) return;
 
     const finalName = userName.trim() || user?.name || "Anonymous";
+    console.log(
+      "🚪 Requesting to join meeting with name:",
+      finalName,
+      participantId,
+      meetingId,
+    );
 
     setRejectionMessage("");
     setIsWaiting(true);
-    // send event for the owner to join the room if not the owner, otherwise just navigate to the meeting page
-    if (user?.id) {
-      requestJoin(meetingId, finalName, user.id);
-    } else {
-      requestJoin(meetingId, finalName);
-    }
+
+    requestJoin(meetingId, finalName, participantId);
   };
 
   return (

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router";
 import { motion } from "motion/react";
 import { Video, Plus, LogIn, ArrowRight, User } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { createRoom } from "../api/roomApi";
+import { getOrCreateParticipantId } from "../utils/participantId";
 
 /**
  * Home Page Component
@@ -14,6 +15,13 @@ export const Home: React.FC = () => {
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState("");
   const { isAuthenticated, logout, token, user } = useAuth();
+  const [participantId, setParticipantId] = useState("");
+
+  // Initialize participantId for guest or use user id
+  useEffect(() => {
+    const id = user?.id || getOrCreateParticipantId();
+    setParticipantId(id);
+  }, [user?.id]);
 
   const handleCreateMeeting = async () => {
     if (!isAuthenticated) {
@@ -22,10 +30,10 @@ export const Home: React.FC = () => {
     }
 
     const newRoom = await createRoom(token);
-    console.log("Created room:", newRoom);
     navigate(`/meeting/${newRoom.code}`, {
       state: {
         userName: user?.name,
+        participantId: participantId,
         mediaPreferences: {
           micOn: true,
           cameraOn: true,

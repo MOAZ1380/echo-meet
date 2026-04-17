@@ -38,9 +38,14 @@ export class MeetingGateway implements OnModuleInit {
    */
   handleConnection(client: Socket) {
     const userId = client.handshake.query.userId as string;
+    const participantId = client.handshake.query.participantId as string;
 
     if (userId) {
       client.join(userId);
+    }
+
+    if (participantId) {
+      client.join(participantId);
     }
   }
 
@@ -64,12 +69,18 @@ export class MeetingGateway implements OnModuleInit {
    */
   @SubscribeMessage('requestJoin')
   async requestJoin(
-    @MessageBody() data: { roomId: string; name: string; userId: string },
+    @MessageBody()
+    data: {
+      roomId: string;
+      name: string;
+      participantId: string;
+    },
   ) {
+    console.log('🔥 requestJoin called', data);
     const participant = await this.roomService.requestJoin(
       data.roomId,
       data.name,
-      data.userId,
+      data.participantId,
     );
 
     const room = await this.roomService.findOne(data.roomId);
@@ -77,7 +88,7 @@ export class MeetingGateway implements OnModuleInit {
     // return id if user is guest (no userId), otherwise return userId
     this.server.to(room.ownerId).emit('room:join-request', {
       roomId: data.roomId,
-      userId: data.userId,
+      participantId: data.participantId,
       participant,
     });
 
@@ -95,19 +106,28 @@ export class MeetingGateway implements OnModuleInit {
    */
   @SubscribeMessage('approveUser')
   async approveUser(
-    @MessageBody() data: { roomId: string; userId: string; ownerId: string },
+    @MessageBody()
+    data: {
+      roomId: string;
+      participantId: string;
+      ownerId: string;
+    },
   ) {
     console.log('🔥 approveUser called', data);
-    await this.roomService.approveUser(data.roomId, data.userId, data.ownerId);
+    await this.roomService.approveUser(
+      data.roomId,
+      data.participantId,
+      data.ownerId,
+    );
 
-    this.server.to(data.userId).emit('room:approved', {
+    this.server.to(data.participantId).emit('room:approved', {
       roomId: data.roomId,
-      userId: data.userId,
+      participantId: data.participantId,
     });
 
     this.server.to(data.ownerId).emit('room:approved', {
       roomId: data.roomId,
-      userId: data.userId,
+      participantId: data.participantId,
     });
 
     return { success: true };
@@ -124,14 +144,23 @@ export class MeetingGateway implements OnModuleInit {
    */
   @SubscribeMessage('rejectUser')
   async rejectUser(
-    @MessageBody() data: { roomId: string; userId: string; ownerId: string },
+    @MessageBody()
+    data: {
+      roomId: string;
+      participantId: string;
+      ownerId: string;
+    },
   ) {
     console.log('🔥 rejectUser called', data);
-    await this.roomService.rejectUser(data.roomId, data.userId, data.ownerId);
+    await this.roomService.rejectUser(
+      data.roomId,
+      data.participantId,
+      data.ownerId,
+    );
 
-    this.server.to(data.userId).emit('room:rejected', {
+    this.server.to(data.participantId).emit('room:rejected', {
       roomId: data.roomId,
-      userId: data.userId,
+      participantId: data.participantId,
       reason: 'غير مسموح لك بالانضمام إلى هذه الغرفة.',
     });
 
@@ -150,7 +179,7 @@ export class MeetingGateway implements OnModuleInit {
    */
   @SubscribeMessage('joinRoom')
   async joinRoom(
-    @MessageBody() data: { roomId: string; userId: string },
+    @MessageBody() data: { roomId: string; participantId: string },
     @ConnectedSocket() client: Socket,
   ) {
     const room = await this.roomService.findOne(data.roomId);
@@ -164,7 +193,7 @@ export class MeetingGateway implements OnModuleInit {
     ].roomParticipant.findFirst({
       where: {
         roomId: room.id,
-        userId: data.userId,
+        id: data.participantId,
         status: 'approved',
       },
     });
@@ -176,7 +205,7 @@ export class MeetingGateway implements OnModuleInit {
     client.join(room.id);
 
     this.server.to(room.id).emit('userJoined', {
-      userId: data.userId,
+      participantId: data.participantId,
     });
 
     return { success: true };

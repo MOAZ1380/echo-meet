@@ -10,7 +10,7 @@ type StoredUser = {
 type JoinRequestEvent = {
   roomId: string;
   userId: string;
-  paricipant: {
+  participant: {
     id: string;
     name: string;
     status: string;
@@ -21,10 +21,12 @@ type RoomDecisionEvent = {
   roomId: string;
   userId?: string;
   reason?: string;
+  participantId: string;
 };
 
 type UserJoinedEvent = {
-  userId: string;
+  userId?: string;
+  participantId: string;
 };
 
 type SocketErrorEvent = {
@@ -81,7 +83,11 @@ export function useRoomChat() {
         }
 
         return prev.filter(
-          (req) => !(req.roomId === data.roomId && req.userId === data.userId),
+          (req) =>
+            !(
+              req.roomId === data.roomId &&
+              req.participant.id === data.participantId
+            ),
         );
       });
     }
@@ -98,13 +104,17 @@ export function useRoomChat() {
         }
 
         return prev.filter(
-          (req) => !(req.roomId === data.roomId && req.userId === data.userId),
+          (req) =>
+            !(
+              req.roomId === data.roomId &&
+              req.participant.id === data.participantId
+            ),
         );
       });
     }
 
     function onUserJoined(data: UserJoinedEvent) {
-      setLastJoinedUserId(data.userId);
+      setLastJoinedUserId(data.participantId);
 
       const roomId = joinedRoomId;
       if (!roomId) return;
@@ -113,7 +123,7 @@ export function useRoomChat() {
         ...prev,
         {
           userId: "system",
-          message: `${data.userId} joined room ${roomId}`,
+          message: `${data.participantId} joined room ${roomId}`,
         },
       ]);
     }
@@ -144,62 +154,80 @@ export function useRoomChat() {
   }, [joinedRoomId]);
 
   // Join the legacy socket room channel.
-  function joinRoom(roomId: string, userId?: string) {
-    const resolvedUserId = userId?.trim() || getCurrentUserId();
+  function joinRoom(roomId: string, participantId: string) {
+    const resolvedParticipantId = participantId?.trim() || getCurrentUserId();
 
-    if (!resolvedUserId) return;
+    if (!resolvedParticipantId) return;
 
     setJoinedRoomId(roomId);
-    socket.emit("joinRoom", { roomId, userId: resolvedUserId });
+    socket.emit("joinRoom", { roomId, participantId: resolvedParticipantId });
   }
 
   // Emit join request for a specific room.
-  async function requestJoin(roomId: string, name: string, userId?: string) {
-    const resolvedUserId = userId?.trim() || getCurrentUserId();
-    console.log("🚀 requesting join", roomId, name, resolvedUserId);
+  async function requestJoin(
+    roomId: string,
+    name: string,
+    participantId: string,
+  ) {
+    const resolvedParticipantId = participantId.trim();
+    syncSocketIdentity(resolvedParticipantId);
+    console.log("🚀 requesting join", roomId, name, resolvedParticipantId);
     socket.emit("requestJoin", {
       roomId,
       name,
-      userId: resolvedUserId,
+      participantId: resolvedParticipantId,
     });
   }
 
   // Owner emits approve action for a pending user.
   function approveUser(
     roomId: string,
-    userId: string | undefined = undefined,
+    participantId: string,
     ownerId?: string,
   ) {
-    const resolvedOwnerId = ownerId?.trim() || getCurrentUserId();
+    console.log("✅ approving user", roomId, participantId, ownerId);
+    const resolvedOwnerId = ownerId || getCurrentUserId();
+
+    if (!resolvedOwnerId) {
+      console.error("❌ Cannot approve user: owner ID not found");
+      return;
+    }
 
     setJoinRequests((prev) =>
-      prev.filter((req) => !(req.roomId === roomId && req.userId === userId)),
+      prev.filter(
+        (req) =>
+          !(req.roomId === roomId && req.participant.id === participantId),
+      ),
     );
 
     socket.emit("approveUser", {
       roomId,
-      userId,
+      participantId,
       ownerId: resolvedOwnerId,
     });
   }
 
   // Owner emits reject action for a pending user.
-  function rejectUser(
-    roomId: string,
-    userId: string | undefined,
-    ownerId?: string,
-  ) {
-    const resolvedOwnerId = ownerId?.trim() || getCurrentUserId();
+  function rejectUser(roomId: string, participantId: string, ownerId?: string) {
+    const resolvedOwnerId = ownerId || getCurrentUserId();
 
-    if (!resolvedOwnerId || !userId) return;
+    if (!resolvedOwnerId || !participantId) {
+      console.error(
+        "❌ Cannot reject user: missing owner ID or participant ID",
+      );
+      return;
+    }
 
     setJoinRequests((prev) =>
-      prev.filter((req) => !(req.roomId === roomId && req.userId === userId)),
+      prev.filter(
+        (req) =>
+          !(req.roomId === roomId && req.participant.id === participantId),
+      ),
     );
 
     socket.emit("rejectUser", {
       roomId,
-      userId,
+      participantId,
       ownerId: resolvedOwnerId,
     });
   }
