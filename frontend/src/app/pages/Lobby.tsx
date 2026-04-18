@@ -9,6 +9,7 @@ import {
   ArrowRight,
   LoaderCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useMediaStream } from "../hooks/useMediaStream";
 import { useAuth } from "../hooks/useAuth";
 import { useRoomChat } from "../hooks/useRoomChat";
@@ -29,6 +30,7 @@ export const Lobby: React.FC = () => {
     lastApprovedRoomId,
     lastRejectedRoomId,
     lastRejectedReason,
+    lastError,
   } = useRoomChat();
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
@@ -130,6 +132,12 @@ export const Lobby: React.FC = () => {
       );
     }
   }, [lastRejectedReason, lastRejectedRoomId, meetingId]);
+
+  useEffect(() => {
+    if (!lastError) return;
+    toast.error(lastError);
+    setIsWaiting(false);
+  }, [lastError]);
 
   const handleJoinMeeting = () => {
     if (!meetingId || isWaiting || !participantId) return;

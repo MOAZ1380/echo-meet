@@ -16,6 +16,7 @@ import {
   Bell,
   UserX,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Navbar } from "../components/Navbar";
 import { VideoTile } from "../components/VideoTile";
 import { ControlButton } from "../components/ControlButton";
@@ -26,6 +27,7 @@ import { useMeetingRoom } from "../hooks/useLivekitMeetingRoom";
 import { useRoomChat } from "../hooks/useRoomChat";
 import { getJsonCookie } from "../utils/cookies";
 import { getCurrentParticipantId } from "../utils/participantId";
+import { getErrorMessage } from "../utils/errorMessage";
 
 /**
  * MeetingRoom Page Component
@@ -133,7 +135,15 @@ export const MeetingRoom: React.FC = () => {
     if (!meetingId || hasJoinedRoomRef.current) return;
 
     hasJoinedRoomRef.current = true;
-    void joinMeeting(meetingId);
+    void joinMeeting(meetingId).catch((error) => {
+      toast.error(
+        getErrorMessage(
+          error,
+          "Unable to join this room. It may not exist anymore.",
+        ),
+      );
+      navigate("/");
+    });
   }, [joinMeeting, meetingId]);
 
   // Redirect back home if the route does not include a meeting id.

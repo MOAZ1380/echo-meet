@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { Video, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
 import { renderGoogleButton } from "../services/googleIdentity";
+import { getErrorMessage } from "../utils/errorMessage";
 
 type EnvImportMeta = ImportMeta & {
   env: {
@@ -34,7 +36,7 @@ export const Login: React.FC = () => {
     setIsLoading(true);
     // check if email and password are not empty
     if (!email || !password) {
-      alert("Please enter both email and password");
+      toast.error("Please enter both email and password");
       setIsLoading(false);
       return;
     }
@@ -42,14 +44,14 @@ export const Login: React.FC = () => {
     // check if email is valid
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      alert("Please enter a valid email address");
+      toast.error("Please enter a valid email address");
       setIsLoading(false);
       return;
     }
 
     // check if password is at least 6 characters
     if (password.length < 6) {
-      alert("Password must be at least 6 characters long");
+      toast.error("Password must be at least 6 characters long");
       setIsLoading(false);
       return;
     }
@@ -58,7 +60,7 @@ export const Login: React.FC = () => {
       await login({ email, password });
       navigate("/");
     } catch (error) {
-      console.error("Login failed:", error);
+      toast.error(getErrorMessage(error, "Login failed. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -87,8 +89,13 @@ export const Login: React.FC = () => {
         try {
           await googleLogin({ credential });
           navigate("/");
-        } catch {
-          setGoogleError("Google sign-in failed. Please try again.");
+        } catch (error) {
+          const message = getErrorMessage(
+            error,
+            "Google sign-in failed. Please try again.",
+          );
+          setGoogleError(message);
+          toast.error(message);
         } finally {
           if (!isCancelled) {
             setIsLoading(false);
@@ -97,7 +104,9 @@ export const Login: React.FC = () => {
       },
     }).catch(() => {
       if (!isCancelled) {
-        setGoogleError("Unable to load Google sign-in.");
+        const message = "Unable to load Google sign-in.";
+        setGoogleError(message);
+        toast.error(message);
       }
     });
 

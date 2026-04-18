@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { Video, Mail, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
+import { getErrorMessage } from "../utils/errorMessage";
 
 /**
  * Forgot Password Page Component
@@ -28,8 +30,12 @@ export const ForgotPassword: React.FC = () => {
         navigate("/reset-code", { state: { email } });
       }, 2000);
     } catch (error) {
-      console.error("Password reset request failed:", error);
-      alert("Failed to send reset code. Please check the email and try again.");
+      toast.error(
+        getErrorMessage(
+          error,
+          "Failed to send reset code. Please check the email and try again.",
+        ),
+      );
     } finally {
       setIsLoading(false);
     }

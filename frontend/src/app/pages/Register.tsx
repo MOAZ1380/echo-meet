@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { Video, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
 import { renderGoogleButton } from "../services/googleIdentity";
+import { getErrorMessage } from "../utils/errorMessage";
 
 type EnvImportMeta = ImportMeta & {
   env: {
@@ -54,14 +56,18 @@ export const Register: React.FC = () => {
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setPasswordError("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
     // Validate password strength
     if (formData.password.length < 6) {
       setPasswordError("Password must be at least 6 characters");
+      toast.error("Password must be at least 6 characters");
       return;
     }
+
+    setIsLoading(true);
 
     try {
       await register({
@@ -69,14 +75,14 @@ export const Register: React.FC = () => {
         email: formData.email,
         password: formData.password,
       });
-    } catch {}
-    setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
       navigate("/");
-    }, 1500);
+    } catch (error) {
+      toast.error(
+        getErrorMessage(error, "Could not create account. Please try again."),
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -102,8 +108,13 @@ export const Register: React.FC = () => {
         try {
           await googleLogin({ credential });
           navigate("/");
-        } catch {
-          setGoogleError("Google sign-up failed. Please try again.");
+        } catch (error) {
+          const message = getErrorMessage(
+            error,
+            "Google sign-up failed. Please try again.",
+          );
+          setGoogleError(message);
+          toast.error(message);
         } finally {
           if (!isCancelled) {
             setIsLoading(false);
@@ -112,7 +123,9 @@ export const Register: React.FC = () => {
       },
     }).catch(() => {
       if (!isCancelled) {
-        setGoogleError("Unable to load Google sign-in.");
+        const message = "Unable to load Google sign-in.";
+        setGoogleError(message);
+        toast.error(message);
       }
     });
 
